@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const pool = require('./config/db');
+const playerRoutes = require('./routes/playerRoutes');
 
 const app = express();
 
@@ -15,8 +16,11 @@ app.get('/test-db', async (req, res) => {
   res.json(result.rows);
 });
 
+app.use('/players', playerRoutes);
+
 const PORT = 5001;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
