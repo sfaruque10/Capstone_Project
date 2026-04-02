@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 
+//Method to display Player list from db
 const getPlayers = async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM players');
