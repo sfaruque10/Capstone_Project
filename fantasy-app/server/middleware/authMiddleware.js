@@ -10,7 +10,7 @@ const authMiddleware = (req, res, next) => {
         return res.status(401).json({ error: 'No token' });
     }
 
-    //Check if token patches user
+    //Check if token matches user
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;

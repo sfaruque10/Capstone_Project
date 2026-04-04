@@ -4,6 +4,9 @@ const pool = require('./config/db');
 const playerRoutes = require('./routes/playerRoutes');
 const authRoutes = require('./routes/authRoutes');
 const authMiddleware = require('./middleware/authMiddleware');
+const leagueRoutes = require('./routes/leagueRoutes');
+
+
 
 const app = express();
 
@@ -19,11 +22,14 @@ app.get('/test-db', async (req, res) => {
   res.json(result.rows);
 });
 
-//Method call from Player db table
+//Route to check players
 app.use('/players', playerRoutes);
 
-//Method call for authentication
+//Route for authentication pages
 app.use('/auth', authRoutes);
+
+//Route for league creation and joining pages
+app.use('/leagues', leagueRoutes);
 
 //Test call for middleware functionality
 app.get('/protected', authMiddleware, (req, res) => {
