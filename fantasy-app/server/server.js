@@ -5,6 +5,7 @@ const playerRoutes = require("./routes/playerRoutes");
 const authRoutes = require("./routes/authRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 const leagueRoutes = require("./routes/leagueRoutes");
+const teamRoutes = require('./routes/teamRoutes');
 
 const app = express();
 
@@ -26,8 +27,11 @@ app.use("/players", playerRoutes);
 //Route for authentication pages
 app.use("/auth", authRoutes);
 
-//Route for league creation and joining pages
+//Route for league methods and pages
 app.use("/leagues", leagueRoutes);
+
+//Route for team methods and pages
+app.use('/teams', teamRoutes);
 
 //Test call for middleware functionality
 app.get("/protected", authMiddleware, (req, res) => {
