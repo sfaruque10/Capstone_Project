@@ -89,21 +89,65 @@ const joinLeague = async (req, res) => {
 
 //Method to display JSON league info per user
 const getLeagues = async (req, res) => {
-  try {
-    //Gather League details from user id
-    const result = await pool.query(
-      `SELECT l.*, t.name AS team_name
-       FROM leagues l
-       JOIN teams t ON l.id = t.league_id
-       WHERE t.user_id = $1`,
-      [req.user.id]
-    );
+    try {
+        //Gather League details from user id
+        const result = await pool.query(
+        `SELECT l.*, t.name AS team_name
+        FROM leagues l
+        JOIN teams t ON l.id = t.league_id
+        WHERE t.user_id = $1`,
+        [req.user.id]
+        );
 
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Error fetching leagues');
-  }
+        res.json(result.rows);
+    } catch (err) {
+     console.error(err);
+     res.status(500).send('Error fetching leagues');
+    }
 };
 
-module.exports = {createLeague, joinLeague, getLeagues}
+//Method to get league by league id in request url
+const getLeagueById = async (req, res) => {
+   
+    //Get league id from url
+    const { id } = req.params;
+
+    try {
+        //Gather league details from league id
+        const result = await pool.query(
+        'SELECT * FROM leagues WHERE id = $1',
+        [id]
+        );
+
+        //Error catch for nonexistent league
+        if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'League not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+     console.error(err);
+     res.status(500).send('Error fetching league');
+    }
+};
+
+//Method to get teams in league by league id in request url
+const getLeagueTeams = async (req, res) => {
+
+    //Get league id from url
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+        'SELECT * FROM teams WHERE league_id = $1',
+        [id]
+        );
+
+        res.json(result.rows);
+    } catch (err) {
+     console.error(err);
+     res.status(500).send('Error fetching teams');
+    }
+};
+
+module.exports = {createLeague, joinLeague, getLeagues, getLeagueById, getLeagueTeams}
