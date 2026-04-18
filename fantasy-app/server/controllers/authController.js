@@ -44,7 +44,7 @@ const login = async (req, res) => {
         }
 
         //Check if password matches user password
-        const validPassword = await bcrypt.compare(password, user.password_hash);
+        const validPassword = await bcrypt.compare(password, user.password);
 
         //Error if wrong password
         if (!validPassword) {
