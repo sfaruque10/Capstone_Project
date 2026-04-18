@@ -26,36 +26,33 @@ const createLeague = async (req, res) => {
 //Method to join league
 const joinLeague = async (req, res) => {
     //Get team name and league id from request
-    const {name, league_id} = req.body;
+    const {name, league_name} = req.body;
 
     //Error catches if missing data (Remove later if error catch is added to front end)
     if (!name) {
         return res.status(400).json({ error: 'Team name is required' });
     }
-    if (!league_id) {
-        return res.status(400).json({ error: 'League ID is required' });
-    }
-
-    const leagueId = Number(league_id);
-    if (!Number.isInteger(leagueId)) {
-        return res.status(400).json({ error: 'Invalid league ID' });
+    if (!league_name) {
+        return res.status(400).json({ error: 'League Name is required' });
     }
 
     try {
     //Check if league trying to join exists
         const leagueCheck = await pool.query(
-            'SELECT * FROM leagues WHERE id = $1',
-            [leagueId]
+            'SELECT * FROM leagues WHERE LOWER(name) = LOWER($1)',
+            [league_name]
         );
 
         if (leagueCheck.rows.length === 0) {
             return res.status(404).json({ error: 'League not found' });
         }
 
+        const league = leagueCheck.rows[0];
+
         //Check if user has already created a team in this league
         const existingTeam = await pool.query(
             'SELECT * FROM teams WHERE user_id = $1 AND league_id = $2',
-            [req.user.id, leagueId]
+            [req.user.id, league.id]
         );
 
         if (existingTeam.rows.length > 0) {
@@ -65,7 +62,7 @@ const joinLeague = async (req, res) => {
         //Check if league is already at max team limit
         const teamCount = await pool.query(
             'SELECT COUNT(*) FROM teams WHERE league_id = $1',
-            [leagueId]
+            [league.id]
         );
 
         const count = parseInt(teamCount.rows[0].count);
@@ -78,12 +75,12 @@ const joinLeague = async (req, res) => {
         //Add team to database with league id
         const result = await pool.query(
             'INSERT INTO teams (name, user_id, league_id) VALUES ($1, $2, $3) RETURNING *',
-            [name, req.user.id, leagueId]
+            [name, req.user.id, league.id]
         );
         res.json(result.rows[0]);
     }catch (err) {
      console.error(err);
-     res.status(500).send('Error creating joining league');
+     res.status(500).send({ error: err.message });
     };
 };
 

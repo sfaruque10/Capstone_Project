@@ -20,3 +20,17 @@ export const login = async (
 
   return token;
 };
+
+export const register = async (
+  username: string,
+  email: string,
+  password: string
+) => {
+  const response = await API.post('/auth/register', {
+    username,
+    email,
+    password,
+  });
+
+  return response.data;
+};

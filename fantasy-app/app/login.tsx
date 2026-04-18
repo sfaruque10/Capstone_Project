@@ -1,12 +1,13 @@
-import { router } from "expo-router";
 import { useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
 import { login } from '../services/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 function Login() {
   const [identifier, onChangeIdentifier] = useState("");
   const [password, onChangePassword] = useState("");
+  const router = useRouter();
 
     const handleLogin = async () => {
     try {
@@ -15,6 +16,9 @@ function Login() {
 
       const token = await AsyncStorage.getItem('token');
       console.log('TOKEN:', token);
+
+      router.replace('/leagues');
+
     } catch (err) {
       console.error('Login error:', err);
     }
