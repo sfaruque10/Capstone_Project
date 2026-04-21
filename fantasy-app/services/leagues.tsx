@@ -3,7 +3,7 @@ import API from './api';
 export interface League {
   id: number;
   name: string;
-  owner_id: number;
+  owner_name: string;
 }
 
 export const getLeagues = async (): Promise<League[]> => {
@@ -21,5 +21,21 @@ export const joinLeague = async (name: string, league_name: string) => {
     name,
     league_name,
   });
+  return response.data;
+};
+
+export const getLeagueDetails = async (id: number) => {
+  const response = await API.get(`/leagues/${id}`);
+  return response.data;
+}
+
+export interface Team {
+  id: number;
+  name: string;
+  username: string;
+}
+
+export const getLeagueTeams = async (leagueId: number): Promise<Team[]> => {
+  const response = await API.get(`/leagues/${leagueId}/teams`);
   return response.data;
 };

@@ -66,6 +66,19 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, login };
+const getCurrentUser = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, username, email FROM users WHERE id = $1',
+      [req.user.id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { register, login, getCurrentUser };
 
 

@@ -39,7 +39,9 @@ const LeaguesScreen = () => {
         <Text>No leagues yet</Text>
       ) : (
         leagues.map((league) => (
-          <Text key={league.id}>{league.name}</Text>
+          <Text key={league.id} onPress={() => router.push(`/leagues/${league.id}`)}>
+            {league.name}
+          </Text>
         ))
       )}
     </View>

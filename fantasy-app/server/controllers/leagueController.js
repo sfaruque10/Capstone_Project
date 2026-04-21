@@ -112,7 +112,10 @@ const getLeagueById = async (req, res) => {
     try {
         //Gather league details from league id
         const result = await pool.query(
-        'SELECT * FROM leagues WHERE id = $1',
+        `SELECT l.id, l.name, u.username AS owner_name
+        FROM leagues l
+        JOIN users u ON l.owner_id = u.id
+        WHERE l.id = $1`,
         [id]
         );
 
@@ -136,7 +139,7 @@ const getLeagueTeams = async (req, res) => {
 
     try {
         const result = await pool.query(
-        'SELECT * FROM teams WHERE league_id = $1',
+        'SELECT t.id, t.name, u.username FROM teams t JOIN users u ON t.user_id = u.id WHERE t.league_id = $1;',
         [id]
         );
 
