@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getTeamById, getUserTeams, getTeamPlayers, addPlayerToTeam } = require('../controllers/teamController');
+const { getTeamById, getUserTeams, getTeamPlayers, addPlayerToTeam, removePlayerFromTeam, updatePlayerSlot } = require('../controllers/teamController');
 const authMiddleware = require('../middleware/authMiddleware');
 
 //Team method paths
@@ -9,6 +9,8 @@ router.get('/my-teams', authMiddleware, getUserTeams);
 router.get('/:id', authMiddleware, getTeamById);
 router.get('/:id/players', authMiddleware, getTeamPlayers);
 router.post('/:id/players', authMiddleware, addPlayerToTeam);
+router.delete('/:id/players/:playerId', authMiddleware, removePlayerFromTeam);
+router.patch('/:id/players', authMiddleware, updatePlayerSlot);
 
 
 module.exports = router;

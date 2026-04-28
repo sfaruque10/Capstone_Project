@@ -2,13 +2,25 @@ const pool = require('../config/db');
 
 //Method to display Player list from db
 const getPlayers = async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM players');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+  const { search, position } = req.query;
+
+  let query = 'SELECT * FROM players WHERE 1=1';
+  const values = [];
+
+  if (search) {
+    values.push(`%${search}%`);
+    query += ` AND LOWER(name) LIKE LOWER($${values.length})`;
   }
+
+  if (position) {
+    values.push(position);
+    query += ` AND position = $${values.length}`;
+  }
+
+  query += ' ORDER BY name';
+
+  const result = await pool.query(query, values);
+  res.json(result.rows);
 };
 
 const getPlayerById = async (req, res) => {
@@ -32,6 +44,8 @@ const getPlayerById = async (req, res) => {
     res.status(500).send('Server error');
     }
 };
+
+
 
 
 module.exports = { getPlayers, getPlayerById };

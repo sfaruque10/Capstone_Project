@@ -94,4 +94,28 @@ const addPlayerToTeam = async (req, res) => {
   }
 };
 
-module.exports = { getTeamById, getUserTeams, getTeamPlayers, addPlayerToTeam};
+const removePlayerFromTeam = async (req, res) => {
+  const { id, playerId } = req.params;
+
+  await pool.query(
+    'DELETE FROM team_players WHERE team_id = $1 AND player_id = $2',
+    [id, playerId]
+  );
+
+  res.json({ message: 'Removed' });
+};
+
+const updatePlayerSlot = async (req, res) => {
+  const { team_id, player_id, slot } = req.body;
+
+  await pool.query(
+    `UPDATE team_players
+     SET slot = $1
+     WHERE team_id = $2 AND player_id = $3`,
+    [slot, team_id, player_id]
+  );
+
+  res.json({ message: 'Updated' });
+};
+
+module.exports = { getTeamById, getUserTeams, getTeamPlayers, addPlayerToTeam, removePlayerFromTeam, updatePlayerSlot };
