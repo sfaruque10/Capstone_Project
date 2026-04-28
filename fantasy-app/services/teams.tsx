@@ -22,6 +22,7 @@ export const getTeamPlayers = async (teamId: number) => {
 export const addPlayerToTeam = async (
   teamId: number,
   player: any,
+  leagueid: number,
   position: string,
 ) => {
   await API.post("/players", {
@@ -34,6 +35,7 @@ export const addPlayerToTeam = async (
   const response = await API.post(`/teams/${teamId}/players`, {
     player_id: Number(player.id),
     slot: position,
+    league_id: leagueid,
   });
   return response.data;
 };

@@ -21,12 +21,13 @@ interface TeamPlayer {
 }
 
 export default function TeamPage() {
-  const { id } = useLocalSearchParams();
+  const { id, leagueId } = useLocalSearchParams();
   const router = useRouter();
 
   const [team, setTeam] = useState<Team | null>(null);
   const [players, setPlayers] = useState<TeamPlayer[]>([]);
   const [currentUser, setCurrentUser] = useState<number | null>(null);
+  const [leagueDraftedIds, setLeagueDraftedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -36,9 +37,12 @@ export default function TeamPage() {
           const teamData = await getTeamById(Number(id));
           const rosterRes = await API.get(`/teams/${id}/players`);
           const userIdData = await getCurrentUser();
-
+          const leagueRosterRes = await API.get(
+            `/leagues/${leagueId}/drafted-players`,
+          );
           setTeam(teamData);
           setPlayers(rosterRes.data);
+          setLeagueDraftedIds(leagueRosterRes.data);
           setCurrentUser(userIdData.id);
         } catch (err) {
           console.error("Error fetching team data:", err);
@@ -47,18 +51,19 @@ export default function TeamPage() {
         }
       };
       fetchTeamData();
-    }, [id]),
+    }, [id, leagueId]),
   );
 
   const handleAddPlayerNav = (positionName: string) => {
-    const currentIds = players.map((p) => p.player_id);
+    // const currentIds = players.map((p) => p.player_id);
 
     router.push({
       pathname: "/positionPlayer",
       params: {
         position: positionName,
         teamId: id,
-        existingIds: JSON.stringify(currentIds),
+        lID: leagueId,
+        existingIds: JSON.stringify(leagueDraftedIds),
       },
     });
   };

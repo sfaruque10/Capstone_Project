@@ -44,9 +44,11 @@ interface Parent {
 }
 
 function PositionPlayer() {
-  const { position, teamId, existingIds } = useLocalSearchParams<{
+  const { position, teamId, lID, existingIds } = useLocalSearchParams<{
     position: string;
     teamId: string;
+    lID: string;
+
     existingIds: string;
   }>();
 
@@ -165,7 +167,7 @@ function PositionPlayer() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      await addPlayerToTeam(Number(teamId), player, position);
+      await addPlayerToTeam(Number(teamId), player, Number(lID), position);
       router.back();
     } catch (error) {
       console.error(error);
@@ -206,7 +208,7 @@ function PositionPlayer() {
 
               {isDuplicate ? (
                 <Text style={{ color: "gray", fontStyle: "italic" }}>
-                  Already on team
+                  Already drafted in this league
                 </Text>
               ) : (
                 <Button

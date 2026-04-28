@@ -52,7 +52,12 @@ const LeagueDetailsScreen = () => {
           <Button
             key={team.id}
             title={`${team.name} — ${team.username}`}
-            onPress={() => router.push(`/teams/${team.id}`)}
+            onPress={() =>
+              router.push({
+                pathname: `/teams/[id]`,
+                params: { id: team.id, leagueId: id },
+              })
+            }
           />
         ))
       )}
