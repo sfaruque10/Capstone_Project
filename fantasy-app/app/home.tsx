@@ -136,10 +136,11 @@ function Home() {
   return (
     <>
       <ScrollView horizontal={true}>
+        {/* <ScrollView> */}
         {games.map((game) => (
-          <View key={game.id}>
+          <View key={game.id} style={{height: 400}}>
             <Button
-              title="Game"
+              title={`${game.competitions[0].competitors[1].team.abbreviation} vs ${game.competitions[0].competitors[0].team.abbreviation}` }
               onPress={() =>
                 router.push({
                   pathname: "/game",

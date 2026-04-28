@@ -1,8 +1,15 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, ScrollView, Button } from 'react-native';
-import { getTeamById, Team } from '../../services/teams';
-import API from '../../services/api';
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  ScrollView,
+  Button,
+} from "react-native";
+import { getTeamById, Team } from "../../services/teams";
+import { getCurrentUser } from "@/services/user";
+import API from "../../services/api";
 
 interface TeamPlayer {
   id: number;
@@ -10,7 +17,7 @@ interface TeamPlayer {
   name: string;
   position: string;
   team: string;
-  slot: string;
+  slot: string; // The database column that saves "First Base", "Infielder", etc.
 }
 
 export default function TeamPage() {
@@ -19,83 +26,104 @@ export default function TeamPage() {
 
   const [team, setTeam] = useState<Team | null>(null);
   const [players, setPlayers] = useState<TeamPlayer[]>([]);
+  const [currentUser, setCurrentUser] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchTeamData = async () => {
-      try {
-        const teamData = await getTeamById(Number(id));
+  useFocusEffect(
+    useCallback(() => {
+      const fetchTeamData = async () => {
+        try {
+          const teamData = await getTeamById(Number(id));
+          const rosterRes = await API.get(`/teams/${id}/players`);
+          const userIdData = await getCurrentUser();
 
-        const rosterRes = await API.get(`/teams/${id}/players`);
-        const rosterData = rosterRes.data;
+          setTeam(teamData);
+          setPlayers(rosterRes.data);
+          setCurrentUser(userIdData.id);
+        } catch (err) {
+          console.error("Error fetching team data:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchTeamData();
+    }, [id]),
+  );
 
-        setTeam(teamData);
-        setPlayers(rosterData);
-      } catch (err) {
-        console.error('Error fetching team data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleAddPlayerNav = (positionName: string) => {
+    const currentIds = players.map((p) => p.player_id);
 
-    fetchTeamData();
-  }, [id]);
+    router.push({
+      pathname: "/positionPlayer",
+      params: {
+        position: positionName,
+        teamId: id,
+        existingIds: JSON.stringify(currentIds),
+      },
+    });
+  };
+
+  const renderSlot = (label: string, searchPos: string, index: number = 0) => {
+    const matchingPlayers = players.filter((p) => p.slot === label);
+    const player = matchingPlayers[index];
+    const isOwner = currentUser === team?.user_id;
+
+    if (player) {
+      return (
+        <View key={`${player.id}-${index}`}>
+          <Text>
+            {label}: {player.name} ({player.position})
+          </Text>
+        </View>
+      );
+    }
+
+    if (isOwner) {
+      return (
+        <View key={`${label}-${index}`}>
+          <Button
+            title={`Add ${label}`}
+            onPress={() => handleAddPlayerNav(searchPos)}
+          />
+        </View>
+      );
+    }
+
+    return null;
+  };
 
   if (loading) return <ActivityIndicator />;
   if (!team) return <Text>Team not found</Text>;
 
-  // 🔥 Group players by slot
-  const grouped = {
-    P: players.filter(p => p.slot === 'P'),
-    C: players.filter(p => p.slot === 'C'),
-    INFIELD: players.filter(p =>
-      ['1B', '2B', '3B', 'SS'].includes(p.slot)
-    ),
-    OF: players.filter(p => p.slot === 'OF'),
-    UTIL: players.filter(p => p.slot === 'UTIL'),
-    BENCH: players.filter(p => p.slot === 'BENCH'),
-  };
-
-  const renderSection = (title: string, data: TeamPlayer[]) => (
-    <View style={{ marginBottom: 20 }}>
-      <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{title}</Text>
-
-      {data.length === 0 ? (
-        <Text style={{ color: 'gray' }}>No players</Text>
-      ) : (
-        data.map(player => (
-          <Text key={player.id}>
-            {player.slot}: {player.name} ({player.position})
-          </Text>
-        ))
-      )}
-    </View>
-  );
-
   return (
-    <ScrollView style={{ padding: 20 }}>
-      {/* Team Info */}
-      <Text style={{ fontSize: 22, fontWeight: 'bold' }}>
-        {team.name}
-      </Text>
+    <ScrollView>
+      <Text>{team.name}</Text>
+      <Text>Owner: {team.username}</Text>
 
-      <Text style={{ marginBottom: 20 }}>
-        Owner: {team.username}
-      </Text>
+      <View>
+        <Text>CATCHERS</Text>
+        {renderSlot("Catcher", "Catcher", 0)}
+        {renderSlot("Catcher", "Catcher", 1)}
 
-      {/* Add Player Button (prep for next step) */}
-      <Button
-        title="Add Player"
-        onPress={() => router.push('/players')}
-      />
+        <Text>INFIELD</Text>
+        {renderSlot("First Baseman", "First Baseman")}
+        {renderSlot("Second Baseman", "Second Baseman")}
+        {renderSlot("Shortstop", "Shortstop")}
+        {renderSlot("Third Baseman", "Third Baseman")}
+        {renderSlot("Infielder", "Infielder", 0)}
+        {renderSlot("Infielder", "Infielder", 1)}
 
-      {/* Roster Sections */}
-      {renderSection('Pitchers', grouped.P)}
-      {renderSection('Catchers', grouped.C)}
-      {renderSection('Infield', grouped.INFIELD)}
-      {renderSection('Outfield', grouped.OF)}
-      {renderSection('Utility', grouped.UTIL)}
-      {renderSection('Bench', grouped.BENCH)}
+        <Text>OUTFIELD</Text>
+        {[0, 1, 2, 3, 4].map((i) => renderSlot("Outfielder", "Outfielder", i))}
+
+        <Text>UTILITY</Text>
+        {renderSlot("Designated Hitter", "Designated Hitter")}
+
+        <Text>PITCHERS</Text>
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) =>
+          renderSlot("Pitcher", "Pitcher", i),
+        )}
+      </View>
     </ScrollView>
   );
 }

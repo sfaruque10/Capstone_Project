@@ -1,4 +1,4 @@
-import API from './api';
+import API from "./api";
 
 export interface Team {
   id: number;
@@ -19,7 +19,27 @@ export const getTeamPlayers = async (teamId: number) => {
 };
 
 // Add player to team
-export const addPlayerToTeam = async (teamId: number, playerId: number) => {
-  const response = await API.post(`/teams/${teamId}/players`, { playerId });
+export const addPlayerToTeam = async (
+  teamId: number,
+  player: any,
+  position: string,
+) => {
+  await API.post("/players", {
+    id: player.id, // This matches your FK
+    name: player.fullName,
+    position: player?.position?.displayName || "N/A",
+    // name: player.fullName,
+    // position: player.position
+  });
+  const response = await API.post(`/teams/${teamId}/players`, {
+    player_id: Number(player.id),
+    slot: position,
+  });
   return response.data;
 };
+
+// export const getTeamOwner = async (teamId: number, userId: number) => {
+//   const response = await API.get(`/`)
+
+//   // const response = await API.get(`/teams/${teamId}/user_id`)
+// };
