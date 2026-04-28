@@ -1,7 +1,12 @@
-import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
-import { getLeagueDetails, getLeagueTeams, League, Team } from '../../services/leagues';
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { View, Text, ActivityIndicator, Button } from "react-native";
+import {
+  getLeagueDetails,
+  getLeagueTeams,
+  League,
+  Team,
+} from "../../services/leagues";
 
 const LeagueDetailsScreen = () => {
   const { id } = useLocalSearchParams();
@@ -19,7 +24,7 @@ const LeagueDetailsScreen = () => {
         setLeagueDetails(leagueData);
         setTeams(teamData);
       } catch (err) {
-        console.error('Error fetching league data:', err);
+        console.error("Error fetching league data:", err);
       } finally {
         setLoading(false);
       }
@@ -29,7 +34,7 @@ const LeagueDetailsScreen = () => {
   }, [id]);
 
   if (loading) return <ActivityIndicator />;
-
+  console.log(teams);
   if (!league) return <Text>League not found</Text>;
 
   return (
@@ -44,9 +49,11 @@ const LeagueDetailsScreen = () => {
         <Text>No teams yet</Text>
       ) : (
         teams.map((team) => (
-          <Text key={team.id}>
-            {team.name} — {team.username}
-          </Text>
+          <Button
+            key={team.id}
+            title={`${team.name} — ${team.username}`}
+            onPress={() => router.push(`/teams/${team.id}`)}
+          />
         ))
       )}
     </View>

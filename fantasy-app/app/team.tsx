@@ -41,7 +41,7 @@ interface Items {
   age: number;
   headshot: Headshot;
   jersey: string;
-  position: Position[];
+  position: Position;
 }
 interface Headshot {
   href: string;

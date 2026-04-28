@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
-import { register } from '../services/auth';
+import { supabase } from "@/services/supabase";
+import { register } from "../services/auth";
 
 function Signup() {
   const [username, onChangeUsername] = useState("");
@@ -16,13 +17,35 @@ function Signup() {
     }
     try {
       await register(username, email, password);
-      console.log('User registered!');
-      router.replace('/');
+      console.log("User registered!");
+      router.replace("/");
     } catch (err) {
-      console.error('Signup error:', err);
+      console.error("Signup error:", err);
     }
   };
-
+  // const handleSignup = async () => {
+  //     if (password !== reenterPassword) {
+  //       alert("Passwords do not match!");
+  //       return;
+  //     }
+  //     try {
+  //       const { data, error } = await supabase.auth.signUp({
+  //         email: email,
+  //         password: password,
+  //         options: {
+  //           data: {
+  //             username: username,
+  //           },
+  //         },
+  //       });
+  //       // await register(username, email, password);
+  //       if (error) throw error;
+  //       console.log("User registered!", data);
+  //       router.replace("/");
+  //     } catch (err) {
+  //       console.error("Signup error:", err);
+  //     }
+  //   };
 
   return (
     <View

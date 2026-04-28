@@ -5,8 +5,8 @@ const playerRoutes = require("./routes/playerRoutes");
 const authRoutes = require("./routes/authRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 const leagueRoutes = require("./routes/leagueRoutes");
-const teamRoutes = require('./routes/teamRoutes');
-const cors = require('cors');
+const teamRoutes = require("./routes/teamRoutes");
+const cors = require("cors");
 const tradeRoutes = require('./routes/tradeRoutes');
 
 const app = express();
