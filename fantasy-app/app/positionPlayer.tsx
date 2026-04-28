@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { addPlayerToTeam } from "@/services/teams";
+import API from "@/services/api";
 
 interface RosterResponse {
   athletes: Athletes[];
@@ -57,8 +58,10 @@ function PositionPlayer() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const alreadyAdded = existingIds ? JSON.parse(existingIds) : [];
-
+  // const alreadyAdded = existingIds ? JSON.parse(existingIds) : [];
+  const [alreadyAdded, setAlreadyAdded] = useState<number[]>(
+    existingIds ? JSON.parse(existingIds) : [],
+  );
   const fetchPlayer = async () => {
     setIsLoading(true);
     try {
@@ -180,6 +183,20 @@ function PositionPlayer() {
     fetchPlayer();
   }, [position]);
 
+  useEffect(() => {
+    const pollDraftedPlayers = async () => {
+      try {
+        const res = await API.get(`/leagues/${lID}/drafted-players`);
+        setAlreadyAdded(res.data); // Updates the array with newly drafted player IDs
+      } catch (error) {
+        console.error("Failed to poll drafted players:", error);
+      }
+    };
+
+    const intervalId = setInterval(pollDraftedPlayers, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [lID]);
   return (
     <ScrollView style={{ padding: 20 }}>
       <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
