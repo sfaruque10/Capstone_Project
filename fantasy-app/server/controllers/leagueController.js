@@ -76,8 +76,8 @@ const joinLeague = async (req, res) => {
 
     //Add team to database with league id
     const result = await pool.query(
-      "INSERT INTO teams (name, user_id, league_id) VALUES ($1, $2, $3) RETURNING *",
-      [name, req.user.id, league.id],
+      "INSERT INTO teams (name, user_id, league_id, draft_order) VALUES ($1, $2, $3, $4) RETURNING *",
+      [name, req.user.id, league.id, count],
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -139,7 +139,7 @@ const getLeagueTeams = async (req, res) => {
 
   try {
     const result = await pool.query(
-      "SELECT t.id, t.name, u.username FROM teams t JOIN users u ON t.user_id = u.id WHERE t.league_id = $1;",
+      "SELECT t.id, t.name, t.user_id, t.draft_order, u.username FROM teams t JOIN users u ON t.user_id = u.id WHERE t.league_id = $1 ORDER BY t.draft_order ASC;",
       [id],
     );
 

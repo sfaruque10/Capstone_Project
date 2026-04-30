@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import { getTeamById, Team } from "../../services/teams";
 import { getCurrentUser } from "@/services/user";
 import API from "../../services/api";
+import { getLeagueTeams } from "@/services/leagues";
 
 interface TeamPlayer {
   id: number;
@@ -20,11 +21,24 @@ interface TeamPlayer {
   slot: string; // The database column that saves "First Base", "Infielder", etc.
 }
 
+const getDraftStatus = (totalPicks: number, numTeams: number) => {
+  if (numTeams === 0) return { round: 1, pickingTeamIndex: 0 };
+  const round = Math.floor(totalPicks / numTeams) + 1;
+  const pickInRound = (totalPicks % numTeams) + 1;
+
+  // Reverse order on even rounds
+  const pickingTeamIndex =
+    round % 2 !== 0 ? pickInRound - 1 : numTeams - pickInRound;
+
+  return { round, pickingTeamIndex };
+};
+
 export default function TeamPage() {
   const { id, leagueId } = useLocalSearchParams();
   const router = useRouter();
 
   const [team, setTeam] = useState<Team | null>(null);
+  const [allLeagueTeams, setAllLeagueTeams] = useState<any[]>([]);
   const [players, setPlayers] = useState<TeamPlayer[]>([]);
   const [currentUser, setCurrentUser] = useState<number | null>(null);
   const [leagueDraftedIds, setLeagueDraftedIds] = useState<number[]>([]);
@@ -40,10 +54,15 @@ export default function TeamPage() {
           const leagueRosterRes = await API.get(
             `/leagues/${leagueId}/drafted-players`,
           );
+          const leagueTeams = await getLeagueTeams(Number(leagueId));
           setTeam(teamData);
           setPlayers(rosterRes.data);
           setLeagueDraftedIds(leagueRosterRes.data);
           setCurrentUser(userIdData.id);
+          console.log("Teams from API:", leagueTeams);
+          setAllLeagueTeams(
+            leagueTeams.sort((a: any, b: any) => a.draft_order - b.draft_order),
+          );
         } catch (err) {
           console.error("Error fetching team data:", err);
         } finally {
@@ -53,6 +72,31 @@ export default function TeamPage() {
       fetchTeamData();
     }, [id, leagueId]),
   );
+  useEffect(() => {
+    const pollData = async () => {
+      try {
+        // 1. Check for newly drafted players in the league
+        const leagueRosterRes = await API.get(
+          `/leagues/${leagueId}/drafted-players`,
+        );
+
+        // 2. Fetch the current team's roster (in case you just drafted someone)
+        const rosterRes = await API.get(`/teams/${id}/players`);
+
+        // 3. Update state - this triggers a re-render if data changed
+        setLeagueDraftedIds(leagueRosterRes.data);
+        setPlayers(rosterRes.data);
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    };
+
+    // Poll every 3 seconds (3000ms)
+    const interval = setInterval(pollData, 3000);
+
+    // Clean up the interval when the user leaves the page
+    return () => clearInterval(interval);
+  }, [id, leagueId]);
 
   const handleAddPlayerNav = (positionName: string) => {
     // const currentIds = players.map((p) => p.player_id);
@@ -67,15 +111,55 @@ export default function TeamPage() {
       },
     });
   };
+  const { round, pickingTeamIndex } = getDraftStatus(
+    leagueDraftedIds.length,
+    allLeagueTeams.length,
+  );
+  const teamOnClock = allLeagueTeams[pickingTeamIndex];
+  const isUserTurn = currentUser === teamOnClock?.user_id;
+  const isViewingOwnTeam = currentUser === team?.user_id;
+  console.log("Current User:", currentUser, typeof currentUser);
+  console.log(
+    "Team on Clock UserID:",
+    teamOnClock?.user_id,
+    typeof teamOnClock?.user_id,
+  );
+  console.log("Is it turn?", currentUser === teamOnClock?.user_id);
 
+  // const renderSlot = (label: string, searchPos: string, index: number = 0) => {
+  //   const matchingPlayers = players.filter((p) => p.slot === label);
+  //   const player = matchingPlayers[index];
+  //   const isOwner = currentUser === team?.user_id;
+
+  //   if (player) {
+  //     return (
+  //       <View key={`${player.id}-${index}`}>
+  //         <Text>
+  //           {label}: {player.name} ({player.position})
+  //         </Text>
+  //       </View>
+  //     );
+  //   }
+
+  //   if (isOwner) {
+  //     return (
+  //       <View key={`${label}-${index}`}>
+  //         <Button
+  //           title={`Add ${label}`}
+  //           onPress={() => handleAddPlayerNav(searchPos)}
+  //         />
+  //       </View>
+  //     );
+  //   }
+
+  //   return null;
+  // };
   const renderSlot = (label: string, searchPos: string, index: number = 0) => {
-    const matchingPlayers = players.filter((p) => p.slot === label);
-    const player = matchingPlayers[index];
-    const isOwner = currentUser === team?.user_id;
+    const player = players.filter((p) => p.slot === label)[index];
 
     if (player) {
       return (
-        <View key={`${player.id}-${index}`}>
+        <View key={`${player.id}-${index}`} style={{ paddingVertical: 5 }}>
           <Text>
             {label}: {player.name} ({player.position})
           </Text>
@@ -83,20 +167,24 @@ export default function TeamPage() {
       );
     }
 
-    if (isOwner) {
+    // Only show "Draft" button if it's the User's Turn AND they are on their own page
+    if (isUserTurn && isViewingOwnTeam) {
       return (
-        <View key={`${label}-${index}`}>
+        <View key={`${label}-${index}`} style={{ marginVertical: 5 }}>
           <Button
-            title={`Add ${label}`}
+            title={`Draft ${label}`}
             onPress={() => handleAddPlayerNav(searchPos)}
           />
         </View>
       );
     }
 
-    return null;
+    return (
+      <View key={`${label}-${index}`} style={{ paddingVertical: 5 }}>
+        <Text style={{ color: "gray" }}>{label}: (Waiting...)</Text>
+      </View>
+    );
   };
-
   if (loading) return <ActivityIndicator />;
   if (!team) return <Text>Team not found</Text>;
 

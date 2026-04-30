@@ -1,4 +1,4 @@
-import API from './api';
+import API from "./api";
 
 export interface League {
   id: number;
@@ -7,17 +7,17 @@ export interface League {
 }
 
 export const getLeagues = async (): Promise<League[]> => {
-  const response = await API.get('/leagues');
+  const response = await API.get("/leagues");
   return response.data;
 };
 
 export const createLeague = async (name: string) => {
-  const response = await API.post('/leagues', { name });
+  const response = await API.post("/leagues", { name });
   return response.data;
 };
 
 export const joinLeague = async (name: string, league_name: string) => {
-  const response = await API.post('/leagues/join', {
+  const response = await API.post("/leagues/join", {
     name,
     league_name,
   });
@@ -27,12 +27,14 @@ export const joinLeague = async (name: string, league_name: string) => {
 export const getLeagueDetails = async (id: number) => {
   const response = await API.get(`/leagues/${id}`);
   return response.data;
-}
+};
 
 export interface Team {
   id: number;
   name: string;
   username: string;
+  user_id: number;
+  draft_order: number;
 }
 
 export const getLeagueTeams = async (leagueId: number): Promise<Team[]> => {

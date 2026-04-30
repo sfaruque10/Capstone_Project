@@ -5,6 +5,7 @@ import {
   Button,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { addPlayerToTeam } from "@/services/teams";
@@ -55,6 +56,7 @@ function PositionPlayer() {
 
   const router = useRouter();
   const [positionPlayers, setPositionPlayers] = useState<Items[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -165,7 +167,9 @@ function PositionPlayer() {
       setIsLoading(false);
     }
   };
-
+  const filteredPlayers = positionPlayers.filter((player) =>
+    player.fullName.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
   const handleAddPlayer = async (player: Items) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -202,11 +206,24 @@ function PositionPlayer() {
       <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
         {position} List:
       </Text>
-
+      <TextInput
+        placeholder="Search players by name..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        style={{
+          height: 45,
+          borderColor: "#ccc",
+          borderWidth: 1,
+          borderRadius: 8,
+          paddingHorizontal: 15,
+          marginBottom: 15,
+          backgroundColor: "#fff",
+        }}
+      />
       {isLoading ? (
         <ActivityIndicator size="large" style={{ marginTop: 20 }} />
-      ) : positionPlayers.length > 0 ? (
-        positionPlayers.map((player) => {
+      ) : filteredPlayers.length > 0 ? (
+        filteredPlayers.map((player) => {
           const isDuplicate = alreadyAdded.includes(Number(player.id));
 
           return (
