@@ -37,6 +37,7 @@ app.use("/leagues", leagueRoutes);
 //Route for team methods and pages
 app.use('/teams', teamRoutes);
 
+//Route for trade methods and pages
 app.use('/trades', tradeRoutes);
 
 //Test call for middleware functionality

@@ -9,8 +9,65 @@ const createTrade = async (req, res) => {
     requested_players
   } = req.body;
 
+  const client = await pool.connect();
+
   try {
-    const tradeResult = await pool.query(
+    await client.query('BEGIN');
+
+    // Prevent self trade
+    if (Number(from_team_id) === Number(to_team_id)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        error: 'Cannot trade with your own team'
+      });
+    }
+
+    // Must include at least one side
+    if (
+      (!offered_players || offered_players.length === 0) &&
+      (!requested_players || requested_players.length === 0)
+    ) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        error: 'Trade must include players'
+      });
+    }
+
+    // Validate sending team exists + belongs to user
+    const fromTeamRes = await client.query(
+      'SELECT * FROM teams WHERE id = $1',
+      [from_team_id]
+    );
+
+    if (fromTeamRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        error: 'Sending team not found'
+      });
+    }
+
+    if (fromTeamRes.rows[0].user_id !== req.user.id) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({
+        error: 'You do not control this team'
+      });
+    }
+
+    // Validate receiving team exists
+    const toTeamRes = await client.query(
+      'SELECT * FROM teams WHERE id = $1',
+      [to_team_id]
+    );
+
+    if (toTeamRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        error: 'Receiving team not found'
+      });
+    }
+
+    // Create trade row
+    const tradeResult = await client.query(
       `INSERT INTO trades
        (league_id, from_team_id, to_team_id)
        VALUES ($1, $2, $3)
@@ -20,54 +77,140 @@ const createTrade = async (req, res) => {
 
     const trade = tradeResult.rows[0];
 
-    for (const playerId of offered_players) {
-      await pool.query(
-        `INSERT INTO trade_players (trade_id, team_id, player_id)
+    // Insert offered players
+    for (const playerId of offered_players || []) {
+      const ownRes = await client.query(
+        `SELECT * FROM team_players
+         WHERE team_id = $1 AND player_id = $2`,
+        [from_team_id, playerId]
+      );
+
+      if (ownRes.rows.length === 0) {
+        throw new Error(
+          `Offered player ${playerId} is not on your team`
+        );
+      }
+
+      await client.query(
+        `INSERT INTO trade_players
+         (trade_id, team_id, player_id)
          VALUES ($1, $2, $3)`,
         [trade.id, from_team_id, playerId]
       );
     }
 
-    for (const playerId of requested_players) {
-      await pool.query(
-        `INSERT INTO trade_players (trade_id, team_id, player_id)
+    // Insert requested players
+    for (const playerId of requested_players || []) {
+      const ownRes = await client.query(
+        `SELECT * FROM team_players
+         WHERE team_id = $1 AND player_id = $2`,
+        [to_team_id, playerId]
+      );
+
+      if (ownRes.rows.length === 0) {
+        throw new Error(
+          `Requested player ${playerId} is not on target team`
+        );
+      }
+
+      await client.query(
+        `INSERT INTO trade_players
+         (trade_id, team_id, player_id)
          VALUES ($1, $2, $3)`,
         [trade.id, to_team_id, playerId]
       );
     }
 
+    await client.query('COMMIT');
+
     res.json(trade);
 
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  } finally {
+    client.release();
   }
 };
 
 const getTradesForTeam = async (req, res) => {
   const { teamId } = req.params;
 
-  const result = await pool.query(
-    `SELECT * FROM trades
-     WHERE from_team_id = $1 OR to_team_id = $1
-     ORDER BY created_at DESC`,
-    [teamId]
-  );
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM trades
+      WHERE from_team_id = $1 OR to_team_id = $1
+      ORDER BY created_at DESC`,
+      [teamId]
+    );
 
   res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
 const rejectTrade = async (req, res) => {
   const { id } = req.params;
+  const client = await pool.connect();
 
-  await pool.query(
-    `UPDATE trades
-     SET status = 'rejected'
-     WHERE id = $1`,
-    [id]
-  );
+  try {
+    await client.query('BEGIN');
 
-  res.json({ message: 'Trade rejected' });
+    const tradeRes = await client.query(
+      'SELECT * FROM trades WHERE id = $1',
+      [id]
+    );
+
+    if (tradeRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trade not found' });
+    }
+
+    const trade = tradeRes.rows[0];
+
+    if (trade.status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Already processed' });
+    }
+
+    const teamRes = await client.query(
+      'SELECT * FROM teams WHERE id = $1',
+      [trade.to_team_id]
+    );
+
+    if (teamRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    if (teamRes.rows[0].user_id !== req.user.id) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    await client.query(
+      `UPDATE trades SET status='rejected' WHERE id=$1`,
+      [id]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({ message: 'Trade rejected' });
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
 };
 
 const acceptTrade = async (req, res) => {
@@ -79,11 +222,40 @@ const acceptTrade = async (req, res) => {
     await client.query('BEGIN');
 
     const tradeRes = await client.query(
-      'SELECT * FROM trades WHERE id = $1',
-      [id]
+    'SELECT * FROM trades WHERE id = $1',
+    [id]
     );
 
+    if (tradeRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trade not found' });
+    } 
+
     const trade = tradeRes.rows[0];
+
+    if (trade.status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Trade is not pending' });
+    }
+
+    const teamRes = await client.query(
+    'SELECT * FROM teams WHERE id = $1',
+    [trade.to_team_id]
+    );
+
+    if (teamRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const receivingTeam = teamRes.rows[0];
+
+    if (receivingTeam.user_id !== req.user.id) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({
+        error: 'Only receiving team may accept trade'
+      });
+    }
 
     const playersRes = await client.query(
       'SELECT * FROM trade_players WHERE trade_id = $1',

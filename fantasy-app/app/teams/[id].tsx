@@ -216,6 +216,16 @@ export default function TeamPage() {
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) =>
           renderSlot("Pitcher", "Pitcher", i),
         )}
+
+        <Button
+          title="Trades"
+          onPress={() =>
+            router.push({
+              pathname: `/trades/${id}`,
+              params: { leagueId },
+            })
+          }
+        />
       </View>
     </ScrollView>
   );
