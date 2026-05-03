@@ -7,7 +7,7 @@ const authMiddleware = require("./middleware/authMiddleware");
 const leagueRoutes = require("./routes/leagueRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const cors = require("cors");
-const tradeRoutes = require('./routes/tradeRoutes');
+const tradeRoutes = require("./routes/tradeRoutes");
 
 const app = express();
 
@@ -35,10 +35,10 @@ app.use("/auth", authRoutes);
 app.use("/leagues", leagueRoutes);
 
 //Route for team methods and pages
-app.use('/teams', teamRoutes);
+app.use("/teams", teamRoutes);
 
 //Route for trade methods and pages
-app.use('/trades', tradeRoutes);
+app.use("/trades", tradeRoutes);
 
 //Test call for middleware functionality
 app.get("/protected", authMiddleware, (req, res) => {

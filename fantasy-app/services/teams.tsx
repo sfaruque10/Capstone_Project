@@ -40,6 +40,21 @@ export const addPlayerToTeam = async (
   return response.data;
 };
 
+export const syncTeamPoints = async (teamId: number) => {
+  const response = await API.post(`/teams/${teamId}/sync`);
+  return response.data;
+};
+
+export interface TeamPlayer {
+  id: number;
+  player_id: number;
+  name: string;
+  position: string;
+  team: string;
+  slot: string;
+  points: number; // Add this!
+}
+
 // export const getTeamOwner = async (teamId: number, userId: number) => {
 //   const response = await API.get(`/`)
 

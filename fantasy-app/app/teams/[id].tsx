@@ -6,8 +6,9 @@ import {
   ActivityIndicator,
   ScrollView,
   Button,
+  RefreshControl,
 } from "react-native";
-import { getTeamById, Team } from "../../services/teams";
+import { getTeamById, Team, syncTeamPoints } from "../../services/teams";
 import { getCurrentUser } from "@/services/user";
 import API from "../../services/api";
 import { getLeagueTeams } from "@/services/leagues";
@@ -19,6 +20,7 @@ interface TeamPlayer {
   position: string;
   team: string;
   slot: string; // The database column that saves "First Base", "Infielder", etc.
+  points: number;
 }
 
 const getDraftStatus = (totalPicks: number, numTeams: number) => {
@@ -43,47 +45,75 @@ export default function TeamPage() {
   const [currentUser, setCurrentUser] = useState<number | null>(null);
   const [leagueDraftedIds, setLeagueDraftedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       const fetchTeamData = async () => {
         try {
-          const teamData = await getTeamById(Number(id));
-          const rosterRes = await API.get(`/teams/${id}/players`);
-          const userIdData = await getCurrentUser();
-          const leagueRosterRes = await API.get(
-            `/leagues/${leagueId}/drafted-players`,
-          );
-          const leagueTeams = await getLeagueTeams(Number(leagueId));
+          const [
+            teamData,
+            rosterRes,
+            userIdData,
+            leagueRosterRes,
+            leagueTeams,
+          ] = await Promise.all([
+            getTeamById(Number(id)),
+            API.get(`/teams/${id}/players`),
+            getCurrentUser(),
+            API.get(`/leagues/${leagueId}/drafted-players`),
+            getLeagueTeams(Number(leagueId)),
+          ]);
+
           setTeam(teamData);
           setPlayers(rosterRes.data);
           setLeagueDraftedIds(leagueRosterRes.data);
           setCurrentUser(userIdData.id);
-          console.log("Teams from API:", leagueTeams);
           setAllLeagueTeams(
             leagueTeams.sort((a: any, b: any) => a.draft_order - b.draft_order),
           );
+
+          setLoading(false);
+
+          onRefresh();
         } catch (err) {
           console.error("Error fetching team data:", err);
-        } finally {
           setLoading(false);
         }
       };
       fetchTeamData();
     }, [id, leagueId]),
   );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    console.log("Refreshing started");
+
+    try {
+      const result = await syncTeamPoints(Number(id));
+      console.log("Backend Sync Result:", result);
+
+      const rosterRes = await API.get(`/teams/${id}/players`);
+      console.log("New Roster Data:", rosterRes.data);
+
+      setPlayers(rosterRes.data);
+    } catch (err) {
+      console.error("Sync failed error:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   useEffect(() => {
+    if (refreshing) return;
     const pollData = async () => {
       try {
-        // 1. Check for newly drafted players in the league
+        // await syncTeamPoints(Number(id));
         const leagueRosterRes = await API.get(
           `/leagues/${leagueId}/drafted-players`,
         );
 
-        // 2. Fetch the current team's roster (in case you just drafted someone)
         const rosterRes = await API.get(`/teams/${id}/players`);
 
-        // 3. Update state - this triggers a re-render if data changed
         setLeagueDraftedIds(leagueRosterRes.data);
         setPlayers(rosterRes.data);
       } catch (err) {
@@ -94,9 +124,8 @@ export default function TeamPage() {
     // Poll every 3 seconds (3000ms)
     const interval = setInterval(pollData, 3000);
 
-    // Clean up the interval when the user leaves the page
     return () => clearInterval(interval);
-  }, [id, leagueId]);
+  }, [id, leagueId, refreshing]);
 
   const handleAddPlayerNav = (positionName: string) => {
     // const currentIds = players.map((p) => p.player_id);
@@ -163,6 +192,7 @@ export default function TeamPage() {
           <Text>
             {label}: {player.name} ({player.position})
           </Text>
+          <Text style={{ fontWeight: "bold" }}>{player.points || 0} pts</Text>
         </View>
       );
     }
@@ -185,14 +215,28 @@ export default function TeamPage() {
       </View>
     );
   };
+  const totalPoints = players.reduce(
+    (sum, player) => sum + (Number(player.points) || 0),
+    0,
+  );
   if (loading) return <ActivityIndicator />;
   if (!team) return <Text>Team not found</Text>;
 
   return (
-    <ScrollView>
+    <ScrollView
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      <Button
+        title={refreshing ? "Syncing..." : "Manual Sync (Browser Test)"}
+        onPress={onRefresh}
+        disabled={refreshing}
+      />
       <Text>{team.name}</Text>
       <Text>Owner: {team.username}</Text>
-
+      <Text>Total Team Points</Text>
+      <Text>{totalPoints.toFixed(1)} pts</Text>
       <View>
         <Text>CATCHERS</Text>
         {renderSlot("Catcher", "Catcher", 0)}
@@ -221,8 +265,11 @@ export default function TeamPage() {
           title="Trades"
           onPress={() =>
             router.push({
-              pathname: `/trades/${id}`,
-              params: { leagueId },
+              pathname: "/trades/[teamId]",
+              params: {
+                teamId: String(id),
+                leagueId: leagueId,
+              },
             })
           }
         />
