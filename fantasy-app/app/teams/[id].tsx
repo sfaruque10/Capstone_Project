@@ -319,10 +319,6 @@ export default function TeamPage() {
                 <>
                   {[
                     "Catcher",
-                    "First Baseman",
-                    "Second Baseman",
-                    "Third Baseman",
-                    "Shortstop",
                     "Outfielder",
                     "Infielder",
                     "Pitcher",
