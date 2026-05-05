@@ -55,8 +55,14 @@ export interface TeamPlayer {
   points: number; // Add this!
 }
 
-// export const getTeamOwner = async (teamId: number, userId: number) => {
-//   const response = await API.get(`/`)
+export const editPlayerSlot = async (
+  teamId: number,
+  playerId: number,
+  newSlot: string
+) => {
+  const response = await API.patch(`/teams/${teamId}/players`, {
+    slot: newSlot,
+  });
 
-//   // const response = await API.get(`/teams/${teamId}/user_id`)
-// };
+  return response.data;
+}

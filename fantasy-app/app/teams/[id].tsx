@@ -183,6 +183,32 @@ export default function TeamPage() {
 
   //   return null;
   // };
+
+  const updateSlot = async (player_id: number, slot: string) => {
+    try {
+      await API.patch(`/teams/${id}/players`, {
+        team_id: Number(id),
+        player_id,
+        slot,
+      });
+
+      // refresh roster
+      const rosterRes = await API.get(`/teams/${id}/players`);
+      setPlayers(rosterRes.data);
+    } catch (err) {
+      console.error("Slot update failed:", err);
+    }
+  };
+
+  const isValidForSlot = (playerPos: string, slot: string) => {
+    if (slot === "Bench") return true;
+
+    if (slot === "Outfielder") return playerPos === "Outfielder";
+    if (slot === "Pitcher") return playerPos === "Pitcher";
+
+    return playerPos === slot;
+  };
+
   const renderSlot = (label: string, searchPos: string, index: number = 0) => {
     const player = players.filter((p) => p.slot === label)[index];
 
@@ -193,6 +219,13 @@ export default function TeamPage() {
             {label}: {player.name} ({player.position})
           </Text>
           <Text style={{ fontWeight: "bold" }}>{player.points || 0} pts</Text>
+
+          {isViewingOwnTeam && (
+            <Button
+              title="Bench"
+              onPress={() => updateSlot(player.player_id, "Bench")}
+            />
+          )}
         </View>
       );
     }
@@ -260,6 +293,44 @@ export default function TeamPage() {
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) =>
           renderSlot("Pitcher", "Pitcher", i),
         )}
+
+        <Text>BENCH</Text>
+
+        {players
+          .filter((p) => p.slot === "Bench")
+          .map((player) => (
+            <View key={player.id} style={{ paddingVertical: 5 }}>
+              <Text>
+                {player.name} ({player.position})
+              </Text>
+
+              {/* Move from bench → valid slot */}
+              {isViewingOwnTeam && (
+                <>
+                  {[
+                    "Catcher",
+                    "First Baseman",
+                    "Second Baseman",
+                    "Third Baseman",
+                    "Shortstop",
+                    "Outfielder",
+                    "Pitcher",
+                    "Designated Hitter",
+                  ]
+                    .filter((slot) => isValidForSlot(player.position, slot))
+                    .map((slot) => (
+                      <Button
+                        key={slot}
+                        title={`Add to ${slot}`}
+                        onPress={() =>
+                          updateSlot(player.player_id, slot)
+                        }
+                      />
+                    ))}
+                </>
+              )}
+            </View>
+          ))}
 
         <Button
           title="Trades"
