@@ -314,6 +314,7 @@ export default function TeamPage() {
                     "Third Baseman",
                     "Shortstop",
                     "Outfielder",
+                    "Infielder",
                     "Pitcher",
                     "Designated Hitter",
                   ]
