@@ -201,7 +201,17 @@ export default function TeamPage() {
   };
 
   const isValidForSlot = (playerPos: string, slot: string) => {
-    if (slot === "Bench") return true;
+   if (slot === "Bench") return true;
+
+    // Infielder accepts multiple positions
+    if (slot === "Infielder") {
+      return [
+        "First Baseman",
+        "Second Baseman",
+        "Third Baseman",
+        "Shortstop",
+      ].includes(playerPos);
+    }
 
     if (slot === "Outfielder") return playerPos === "Outfielder";
     if (slot === "Pitcher") return playerPos === "Pitcher";
@@ -276,12 +286,12 @@ export default function TeamPage() {
         {renderSlot("Catcher", "Catcher", 1)}
 
         <Text>INFIELD</Text>
-        {renderSlot("First Baseman", "First Baseman")}
-        {renderSlot("Second Baseman", "Second Baseman")}
-        {renderSlot("Shortstop", "Shortstop")}
-        {renderSlot("Third Baseman", "Third Baseman")}
         {renderSlot("Infielder", "Infielder", 0)}
         {renderSlot("Infielder", "Infielder", 1)}
+        {renderSlot("Infielder", "Infielder", 2)}
+        {renderSlot("Infielder", "Infielder", 3)}
+        {renderSlot("Infielder", "Infielder", 4)}
+        {renderSlot("Infielder", "Infielder", 5)}
 
         <Text>OUTFIELD</Text>
         {[0, 1, 2, 3, 4].map((i) => renderSlot("Outfielder", "Outfielder", i))}
