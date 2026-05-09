@@ -18,7 +18,7 @@ function Signup() {
     try {
       await register(username, email, password);
       console.log("User registered!");
-      router.replace("/");
+      router.replace("/profile");
     } catch (err) {
       console.error("Signup error:", err);
     }

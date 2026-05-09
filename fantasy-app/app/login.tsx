@@ -17,7 +17,7 @@ function Login() {
       const token = await AsyncStorage.getItem('token');
       console.log('TOKEN:', token);
 
-      router.replace('/leagues');
+      router.replace('/profile');
 
     } catch (err) {
       console.error('Login error:', err);

@@ -1,6 +1,21 @@
 import { Stack, Tabs } from "expo-router";
+import { useFonts } from "expo-font";
+import {
+  Oswald_400Regular,
+  Oswald_600SemiBold,
+  Oswald_700Bold,
+} from "@expo-google-fonts/oswald";
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Oswald_400Regular,
+    Oswald_600SemiBold,
+    Oswald_700Bold,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
   return (
     <Stack>
       <Tabs>

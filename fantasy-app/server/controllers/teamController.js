@@ -24,9 +24,15 @@ const getTeamById = async (req, res) => {
 const getUserTeams = async (req, res) => {
   try {
     //Gather team details from user id
-    const result = await pool.query("SELECT * FROM teams WHERE user_id = $1", [
-      req.user.id,
-    ]);
+    const result = await pool.query(`SELECT
+      t.*,
+      l.name AS league_name
+    FROM teams t
+    JOIN leagues l
+     ON t.league_id = l.id
+    WHERE t.user_id = $1`,
+    [req.user.id]
+    );
 
     res.json(result.rows);
   } catch (err) {
