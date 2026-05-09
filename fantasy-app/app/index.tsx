@@ -19,7 +19,7 @@ export default function Index() {
         <View style={styles.stripe} />
 
         <Text style={styles.title}>
-          DUGOUT
+          AMERICA'S FAVORITE FANTASY PASSTIME
         </Text>
 
         <Text style={styles.subtitle}>
@@ -80,6 +80,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: "uppercase",
     marginBottom: 10,
+    textAlign: "center",
   },
 
   subtitle: {
