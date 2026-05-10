@@ -7,10 +7,13 @@ import {
   Text,
   TextInput,
   View,
+  StyleSheet,
+  TouchableOpacity,
 } from "react-native";
 import { addPlayerToTeam } from "@/services/teams";
 import API from "@/services/api";
-
+import { COLORS, TYPOGRAPHY } from "@/constants/theme";
+import Navbar from "./navbar";
 interface RosterResponse {
   athletes: Athletes[];
 }
@@ -218,66 +221,197 @@ function PositionPlayer() {
 
     return () => clearInterval(intervalId);
   }, [lID]);
+
   return (
-    <ScrollView style={{ padding: 20 }}>
-      <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
-        {position} List:
-      </Text>
-      <TextInput
-        placeholder="Search players by name..."
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        style={{
-          height: 45,
-          borderColor: "#ccc",
-          borderWidth: 1,
-          borderRadius: 8,
-          paddingHorizontal: 15,
-          marginBottom: 15,
-          backgroundColor: "#fff",
-        }}
-      />
-      {isLoading ? (
-        <ActivityIndicator size="large" style={{ marginTop: 20 }} />
-      ) : filteredPlayers.length > 0 ? (
-        filteredPlayers.map((player) => {
-          const isDuplicate = alreadyAdded.includes(Number(player.id));
+    <View style={styles.page}>
+      {/* 1. HEADER */}
+      <View style={styles.topBar}>
+        <Text style={styles.topBarText}>{position} Recruitment</Text>
+      </View>
 
-          return (
-            <View
-              key={player.id}
-              style={{
-                marginBottom: 15,
-                padding: 10,
-                borderBottomWidth: 1,
-                borderColor: "#eee",
-              }}
-            >
-              <Text>
-                {player.fullName} (#{player.jersey})
-              </Text>
+      <View style={styles.container}>
+        {/* 2. SEARCH SECTION */}
+        <View style={styles.searchSection}>
+          <TextInput
+            placeholder="SEARCH BY PLAYER NAME..."
+            placeholderTextColor={COLORS.faint}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+            autoCapitalize="characters"
+          />
+        </View>
 
-              {isDuplicate ? (
-                <Text style={{ color: "gray", fontStyle: "italic" }}>
-                  Already drafted in this league
-                </Text>
-              ) : (
-                <Button
-                  title="Add Player"
-                  onPress={() => handleAddPlayer(player)}
-                  disabled={isSubmitting}
-                />
-              )}
-            </View>
-          );
-        })
-      ) : (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>
-          No players found for this position.
-        </Text>
-      )}
-    </ScrollView>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 120 }}
+        >
+          {/* 3. SECTION HEADER */}
+          <View style={styles.sectionHeader}>
+            <View style={styles.stripe} />
+            <Text style={styles.sectionTitle}>Available Athletes</Text>
+          </View>
+
+          {isLoading ? (
+            <ActivityIndicator
+              size="large"
+              color={COLORS.primaryBlue}
+              style={{ marginTop: 40 }}
+            />
+          ) : filteredPlayers.length > 0 ? (
+            filteredPlayers.map((player) => {
+              const isDuplicate = alreadyAdded.includes(Number(player.id));
+
+              return (
+                <View key={player.id} style={styles.playerCard}>
+                  <View style={styles.playerInfo}>
+                    <Text style={styles.playerName}>
+                      {player.fullName.toUpperCase()}
+                    </Text>
+                    <Text style={styles.playerSubText}>
+                      #{player.jersey || "00"} •{" "}
+                      {player.position?.abbreviation || position}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        router.push({
+                          pathname: "/player",
+                          params: {
+                            playerID: player.id,
+                          },
+                        })
+                      }
+                      style={{ marginTop: 5 }}
+                    >
+                      <Text
+                        style={{
+                          color: COLORS.lightBlue,
+                          fontFamily: TYPOGRAPHY.body,
+                          fontSize: 12,
+                        }}
+                      >
+                        VIEW PROFILE ➔
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {isDuplicate ? (
+                    <View style={styles.lockedBadge}>
+                      <Text style={styles.lockedText}>DRAFTED</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={[
+                        styles.addButton,
+                        isSubmitting && { opacity: 0.5 },
+                      ]}
+                      onPress={() => handleAddPlayer(player)}
+                      disabled={isSubmitting}
+                    >
+                      <Text style={styles.buttonText}>+ ADD</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })
+          ) : (
+            <Text style={styles.emptyText}>No eligible players found.</Text>
+          )}
+        </ScrollView>
+      </View>
+
+      <Navbar />
+    </View>
   );
 }
+const styles = StyleSheet.create({
+  page: { flex: 1, backgroundColor: COLORS.background },
+  topBar: {
+    backgroundColor: COLORS.card,
+    padding: 20,
+    paddingTop: 60,
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.border,
+  },
+  topBarText: {
+    color: COLORS.text,
+    fontSize: 24,
+    fontFamily: TYPOGRAPHY.title,
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+  },
+  container: { flex: 1, padding: 20 },
+  searchSection: { marginBottom: 25 },
+  searchInput: {
+    backgroundColor: COLORS.cardAlt,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 16,
+    padding: 15,
+    borderRadius: 4,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  stripe: {
+    width: 4,
+    height: 20,
+    backgroundColor: COLORS.primaryRed,
+    marginRight: 10,
+  },
+  sectionTitle: {
+    color: COLORS.muted,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 16,
+    textTransform: "uppercase",
+  },
+  playerCard: {
+    backgroundColor: COLORS.card,
+    padding: 15,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  playerInfo: { flex: 1 },
+  playerName: {
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 16,
+  },
+  playerSubText: { color: COLORS.faint, fontSize: 12, marginTop: 2 },
+  addButton: {
+    backgroundColor: COLORS.primaryBlue,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 2,
+  },
+  lockedBadge: {
+    backgroundColor: COLORS.secondaryBlue,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  lockedText: {
+    color: COLORS.faint,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 12,
+  },
+  buttonText: { color: "white", fontFamily: TYPOGRAPHY.title, fontSize: 12 },
+  emptyText: {
+    color: COLORS.faint,
+    textAlign: "center",
+    marginTop: 40,
+    fontFamily: TYPOGRAPHY.body,
+  },
+});
 
 export default PositionPlayer;

@@ -7,6 +7,9 @@ import {
   Button,
   Alert,
   Platform,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import {
   getLeagueDetails,
@@ -17,6 +20,8 @@ import {
   Team,
 } from "../../services/leagues";
 import { getCurrentUser } from "@/services/user";
+import { COLORS, TYPOGRAPHY } from "@/constants/theme";
+import Navbar from "../navbar";
 
 const LeagueDetailsScreen = () => {
   const { id } = useLocalSearchParams();
@@ -97,76 +102,109 @@ const LeagueDetailsScreen = () => {
       );
     }
   };
-  if (loading) return <ActivityIndicator />;
+  if (loading)
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primaryBlue} />
+      </View>
+    );
   console.log(teams);
   if (!league) return <Text>League not found</Text>;
   const isOwner = currentUserId === league.owner_id;
   console.log(isOwner, currentUserId, league.owner_id);
   const isLocked = league.team_add === false;
   console.log(isLocked, league.team_add);
+
   const teamsByDraftOrder = [...teams].sort(
     (a, b) => a.draft_order - b.draft_order,
   );
   const teamsByStandings = [...teams].sort(
     (a, b) => (b.total_season_points || 0) - (a.total_season_points || 0),
   );
+
   return (
-    <View>
-      <Text>{league.name}</Text>
+    <View style={styles.page}>
+      {/* TOP BAR / HEADER */}
+      <View style={styles.topBar}>
+        <Text style={styles.topBarText}>{league.name}</Text>
+        <Text style={styles.ownerText}>
+          OWNER: {league.owner_name?.toUpperCase()}
+        </Text>
+      </View>
 
-      <Text>Owner: {league.owner_name}</Text>
-      <Text>
-        Status:{" "}
-        {league.team_add
-          ? "Open (Joining Allowed)"
-          : "Locked (Joining Disabled)"}
-      </Text>
-      {isOwner && !isLocked && (
-        <Button
-          title="Lock League Permanently"
-          onPress={() => {
-            if (Platform.OS === "web") {
-              if (window.confirm("Lock league? No more teams can join."))
-                handleToggleLock();
-            } else {
-              Alert.alert("Permanent Action", "Lock league?", [
-                { text: "Cancel", style: "cancel" },
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {/* LEAGUE STATUS */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View
+              style={[
+                styles.stripe,
                 {
-                  text: "Lock Forever",
-                  onPress: handleToggleLock,
-                  style: "destructive",
+                  backgroundColor: isLocked
+                    ? COLORS.primaryRed
+                    : COLORS.primaryBlue,
                 },
-              ]);
-            }
-          }}
-          color="red"
-        />
-      )}
-
-      {isOwner &&
-        isLocked &&
-        !league.draft &&
-        !league.draft_complete &&
-        teams.length > 0 && (
-          <View>
-            <Text>All teams in? Start the draft!</Text>
-            <Button
-              title="Start Draft Mode"
-              onPress={handleStartDraft}
-              color="blue"
+              ]}
             />
+            <Text style={styles.sectionTitle}>League Status</Text>
           </View>
-        )}
+          <Text style={styles.statusText}>
+            {league.team_add
+              ? "OPEN (JOINING ALLOWED)"
+              : "LOCKED (JOINING DISABLED)"}
+          </Text>
 
-      {league.draft && (
-        <View>
-          <Text>Draft is in Progress!</Text>
-          <Button
-            title="Go to Your Team's Draft Room"
+          {isOwner && !isLocked && (
+            <TouchableOpacity
+              style={styles.redButton}
+              onPress={() => {
+                if (Platform.OS === "web") {
+                  if (window.confirm("Lock league? No more teams can join."))
+                    handleToggleLock();
+                } else {
+                  Alert.alert("Permanent Action", "Lock league?", [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Lock Forever",
+                      onPress: handleToggleLock,
+                      style: "destructive",
+                    },
+                  ]);
+                }
+              }}
+            >
+              <Text style={styles.buttonText}>LOCK LEAGUE PERMANENTLY</Text>
+            </TouchableOpacity>
+          )}
+
+          {isOwner &&
+            isLocked &&
+            !league.draft &&
+            !league.draft_complete &&
+            teams.length > 0 && (
+              <View style={{ marginTop: 10 }}>
+                <Text style={[styles.statusText, { marginBottom: 10 }]}>
+                  All teams in? Start the draft!
+                </Text>
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={handleStartDraft}
+                >
+                  <Text style={styles.buttonText}>START DRAFT MODE</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+        </View>
+
+        {/* DRAFT PROGRESS NAVIGATION */}
+        {league.draft && (
+          <TouchableOpacity
+            style={styles.actionCard}
             onPress={() => {
-              // Find the team in this league that belongs to the current user
               const userTeam = teams.find((t) => t.user_id === currentUserId);
-
               if (userTeam) {
                 router.push({
                   pathname: `/teams/[id]`,
@@ -176,106 +214,260 @@ const LeagueDetailsScreen = () => {
                 Alert.alert("Error", "You don't have a team in this league.");
               }
             }}
-            color="green"
-          />
-        </View>
-      )}
-      {league.draft_complete && (
-        <View
-          style={{
-            marginTop: 10,
-            padding: 10,
-            backgroundColor: "#f8f9fa",
-            borderRadius: 8,
-          }}
-        >
-          <Text
-            style={{
-              fontWeight: "bold",
-              color: "#6c757d",
-              textAlign: "center",
-            }}
           >
-            Season is Active - Draft Complete
-          </Text>
-          <Button
-            title="Go to My Roster"
-            onPress={() => {
-              // Find the team in this league that belongs to the current user
-              const userTeam = teams.find((t) => t.user_id === currentUserId);
+            <Text style={styles.actionCardTitle}>DRAFT IS IN PROGRESS!</Text>
+            <Text style={styles.actionCardSub}>
+              GO TO YOUR TEAM'S DRAFT ROOM ➔
+            </Text>
+          </TouchableOpacity>
+        )}
 
+        {/* DRAFT COMPLETE NAVIGATION */}
+        {league.draft_complete && (
+          <TouchableOpacity
+            style={[
+              styles.actionCard,
+              { backgroundColor: COLORS.cardAlt, borderColor: COLORS.border },
+            ]}
+            onPress={() => {
+              const userTeam = teams.find((t) => t.user_id === currentUserId);
               if (userTeam) {
                 router.push({
                   pathname: `/teams/[id]`,
                   params: { id: userTeam.id, leagueId: id },
                 });
               } else {
-                // Fallback in case they are just a league observer
                 Alert.alert(
                   "Notice",
                   "You are viewing this league as a guest.",
                 );
               }
             }}
-            color="#6c757d"
-          />
-        </View>
-      )}
-      {!league.draft_complete ? (
-        <View>
-          <Text>Teams (Draft Order):</Text>
-          {teams.map((team) => (
-            <Button
-              key={team.id}
-              title={`${team.draft_order + 1}. ${team.name} (@${team.username})`}
-              onPress={() =>
-                router.push({
-                  pathname: `/teams/[id]`,
-                  params: { id: team.id, leagueId: id },
-                })
-              }
-            />
-          ))}
-        </View>
-      ) : (
-        // SHOW STANDINGS (Once draft is finished)
-        <View>
-          <Text>League Standings</Text>
-          <View>
-            {/* Header */}
-            <View>
-              <Text>#</Text>
-              <Text>Team</Text>
-              <Text>Points</Text>
-            </View>
+          >
+            <Text style={[styles.actionCardTitle, { color: COLORS.muted }]}>
+              SEASON IS ACTIVE - DRAFT COMPLETE
+            </Text>
+            <Text style={styles.actionCardSub}>GO TO MY ROSTER ➔</Text>
+          </TouchableOpacity>
+        )}
 
-            {/* Rows */}
-            {teamsByStandings.map((team, index) => (
-              <View key={team.id}>
-                <Text>{index + 1}</Text>
-                <View>
-                  <Text
-                    onPress={() =>
-                      router.push({
-                        pathname: `/teams/[id]`,
-                        params: { id: team.id, leagueId: id },
-                      })
-                    }
-                  >
-                    {team.name}
-                  </Text>
-                  <Text style={{ fontSize: 12, color: "gray" }}>
-                    @{team.username}
-                  </Text>
-                </View>
-                <Text>{Number(team.total_season_points || 0).toFixed(1)}</Text>
-              </View>
+        {/* DRAFT ORDER vs STANDINGS LIST */}
+        {!league.draft_complete ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.stripe} />
+              <Text style={styles.sectionTitle}>Teams (Draft Order)</Text>
+            </View>
+            {teams.map((team) => (
+              <TouchableOpacity
+                key={team.id}
+                style={styles.teamRow}
+                onPress={() =>
+                  router.push({
+                    pathname: `/teams/[id]`,
+                    params: { id: team.id, leagueId: id },
+                  })
+                }
+              >
+                <Text style={styles.draftRank}>{team.draft_order + 1}</Text>
+                <Text style={styles.teamNameText}>{team.name}</Text>
+                <Text style={styles.teamOwnerText}>@{team.username}</Text>
+              </TouchableOpacity>
             ))}
           </View>
-        </View>
-      )}
+        ) : (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.stripe} />
+              <Text style={styles.sectionTitle}>League Standings</Text>
+            </View>
+
+            <View style={styles.tableHeader}>
+              <Text style={[styles.columnLabel, { width: 35 }]}>#</Text>
+              <Text style={[styles.columnLabel, { flex: 1 }]}>TEAM</Text>
+              <Text style={[styles.columnLabel, { textAlign: "right" }]}>
+                POINTS
+              </Text>
+            </View>
+
+            {teamsByStandings.map((team, index) => (
+              <TouchableOpacity
+                key={team.id}
+                style={styles.standingRow}
+                onPress={() =>
+                  router.push({
+                    pathname: `/teams/[id]`,
+                    params: { id: team.id, leagueId: id },
+                  })
+                }
+              >
+                <Text style={styles.rankText}>{index + 1}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.teamNameText}>{team.name}</Text>
+                  <Text style={styles.teamOwnerText}>@{team.username}</Text>
+                </View>
+                <Text style={styles.pointsText}>
+                  {Number(team.total_season_points || 0).toFixed(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      <Navbar />
     </View>
   );
 };
 
+const styles = StyleSheet.create({
+  page: { flex: 1, backgroundColor: COLORS.background },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  topBar: {
+    backgroundColor: COLORS.card,
+    padding: 20,
+    paddingTop: 60,
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.border,
+  },
+  topBarText: {
+    color: COLORS.text,
+    fontSize: 28,
+    fontFamily: TYPOGRAPHY.title,
+    textTransform: "uppercase",
+  },
+  ownerText: {
+    color: COLORS.lightBlue,
+    fontSize: 12,
+    fontFamily: TYPOGRAPHY.body,
+    marginTop: 4,
+  },
+  container: { flex: 1, padding: 20 },
+  section: { marginBottom: 30 },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  stripe: {
+    width: 4,
+    height: 20,
+    backgroundColor: COLORS.primaryBlue,
+    marginRight: 10,
+  },
+  sectionTitle: {
+    color: COLORS.muted,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 18,
+    textTransform: "uppercase",
+  },
+  statusText: {
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 16,
+    marginBottom: 15,
+  },
+  primaryButton: {
+    backgroundColor: COLORS.primaryBlue,
+    padding: 16,
+    alignItems: "center",
+    borderRadius: 4,
+  },
+  redButton: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: COLORS.primaryRed,
+    padding: 16,
+    alignItems: "center",
+    borderRadius: 4,
+  },
+  buttonText: {
+    color: "white",
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+  actionCard: {
+    backgroundColor: COLORS.secondaryBlue,
+    padding: 20,
+    borderRadius: 8,
+    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: COLORS.lightBlue,
+  },
+  actionCardTitle: {
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  actionCardSub: {
+    color: COLORS.lightBlue,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 12,
+  },
+  teamRow: {
+    backgroundColor: COLORS.cardAlt,
+    padding: 15,
+    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  draftRank: {
+    color: COLORS.lightBlue,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 20,
+    marginRight: 15,
+    width: 25,
+  },
+  teamNameText: {
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 16,
+    textTransform: "uppercase",
+  },
+  teamOwnerText: {
+    color: COLORS.faint,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 12,
+    marginLeft: 10,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  columnLabel: {
+    color: COLORS.faint,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 12,
+  },
+  standingRow: {
+    backgroundColor: COLORS.card,
+    padding: 15,
+    marginBottom: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  rankText: {
+    color: COLORS.muted,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 18,
+    width: 30,
+  },
+  pointsText: {
+    color: COLORS.primaryBlue,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 20,
+  },
+});
 export default LeagueDetailsScreen;

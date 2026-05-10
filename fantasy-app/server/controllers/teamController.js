@@ -11,7 +11,12 @@ const getTeamById = async (req, res) => {
         t.*, 
         u.username,
         COALESCE(
-          (SELECT SUM(points) FROM daily_scores WHERE team_id = t.id), 
+          (
+            SELECT SUM(points) 
+            FROM daily_scores 
+            WHERE team_id = t.id 
+            AND slot NOT IN ('Bench', 'Any')
+          ), 
           0
         ) AS total_season_points
       FROM teams t

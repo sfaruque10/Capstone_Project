@@ -8,12 +8,135 @@ import {
   Button,
   RefreshControl,
   Platform,
+  StyleSheet,
+  TouchableOpacity,
 } from "react-native";
 import { getTeamById, Team, syncTeamPoints } from "../../services/teams";
 import { getCurrentUser } from "@/services/user";
 import API from "../../services/api";
 import { getLeagueTeams } from "@/services/leagues";
-
+import { COLORS, TYPOGRAPHY } from "../../constants/theme";
+import Navbar from "../navbar";
+const styles = StyleSheet.create({
+  page: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1 },
+  topBar: {
+    backgroundColor: COLORS.card,
+    padding: 20,
+    paddingTop: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  topBarText: {
+    color: COLORS.text,
+    fontSize: 26,
+    fontFamily: TYPOGRAPHY.title,
+    textTransform: "uppercase",
+  },
+  ownerText: {
+    color: COLORS.lightBlue,
+    fontSize: 12,
+    fontFamily: TYPOGRAPHY.body,
+  },
+  scoreBoard: {
+    backgroundColor: COLORS.cardAlt,
+    margin: 20,
+    padding: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.primaryBlue,
+  },
+  scoreLabel: {
+    color: COLORS.muted,
+    fontSize: 10,
+    fontFamily: TYPOGRAPHY.subtitle,
+    letterSpacing: 1,
+  },
+  scoreValue: {
+    color: COLORS.text,
+    fontSize: 36,
+    fontFamily: TYPOGRAPHY.title,
+  },
+  categoryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.secondaryBlue,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    marginTop: 15,
+  },
+  redStripe: {
+    width: 5,
+    height: "100%",
+    backgroundColor: COLORS.primaryRed,
+    marginRight: 10,
+  },
+  categoryHeaderText: {
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 16,
+    letterSpacing: 1,
+  },
+  playerCard: {
+    backgroundColor: COLORS.card,
+    padding: 15,
+    marginHorizontal: 15,
+    marginTop: 2,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  playerInfo: {
+    flex: 1,
+  },
+  playerName: {
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 16,
+  },
+  playerPosition: { color: COLORS.faint, fontSize: 12 },
+  playerPoints: {
+    color: COLORS.lightBlue,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 20,
+  },
+  actionRow: { flexDirection: "row", marginTop: 10, gap: 10 },
+  swapButton: {
+    backgroundColor: COLORS.primaryBlue,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 2,
+  },
+  dropButton: {
+    borderWidth: 1,
+    borderColor: COLORS.primaryRed,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 2,
+  },
+  buttonText: { color: "white", fontFamily: TYPOGRAPHY.title, fontSize: 12 },
+  emptySlot: {
+    marginHorizontal: 15,
+    padding: 15,
+    borderStyle: "dashed",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginTop: 2,
+    alignItems: "center",
+  },
+  emptyText: { color: COLORS.faint, fontFamily: TYPOGRAPHY.body, fontSize: 12 },
+  tradeButton: {
+    backgroundColor: COLORS.primaryBlue,
+    margin: 20,
+    padding: 18,
+    alignItems: "center",
+    borderRadius: 4,
+  },
+});
 interface TeamPlayer {
   id: number;
   player_id: number;
@@ -481,78 +604,145 @@ export default function TeamPage() {
         isValidForSlot(swappingPlayer.position, label);
 
       return (
-        <View key={`${player.id}-${index}`} style={{ paddingVertical: 5 }}>
-          <Text>
-            {label}: {player.name} ({player.position})
-          </Text>
-          <Text style={{ fontWeight: "bold" }}>{player.points || 0} pts</Text>
+        <View key={`${player.id}-${index}`} style={styles.playerCard}>
+          <View style={styles.playerInfo}>
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "/player",
+                  params: { playerID: player.player_id }, // Just the ID is enough now!
+                })
+              }
+            >
+              <Text style={[styles.playerName, { color: COLORS.lightBlue }]}>
+                {player.name.toUpperCase()} ➔
+              </Text>
+            </TouchableOpacity>
+            <Text style={styles.playerPosition}>
+              {label} • {player.position}
+            </Text>
 
-          {isViewingOwnTeam && (
-            <View style={{ flexDirection: "row", marginTop: 5 }}>
-              {/* SWAP BUTTON (Disabled during draft) */}
-              {!league?.draft && (
-                <Button
-                  title={
-                    isThisSelected ? "CANCEL" : canSwapHere ? `CONFIRM` : "SWAP"
-                  }
-                  onPress={() => {
-                    if (canSwapHere) performSwap(swappingPlayer, player);
-                    else setSwappingPlayer(isThisSelected ? null : player);
-                  }}
-                  color={
-                    canSwapHere ? "orange" : isThisSelected ? "red" : "#007bff"
-                  }
-                />
-              )}
+            {isViewingOwnTeam && (
+              <View style={styles.actionRow}>
+                {/* SWAP BUTTON (Disabled during draft) */}
+                {!league?.draft && (
+                  <TouchableOpacity
+                    style={[
+                      styles.swapButton,
+                      {
+                        backgroundColor: canSwapHere
+                          ? "orange"
+                          : isThisSelected
+                            ? COLORS.primaryRed
+                            : COLORS.primaryBlue,
+                      },
+                    ]}
+                    onPress={() => {
+                      if (canSwapHere) performSwap(swappingPlayer, player);
+                      else setSwappingPlayer(isThisSelected ? null : player);
+                    }}
+                  >
+                    <Text style={styles.buttonText}>
+                      {isThisSelected
+                        ? "CANCEL"
+                        : canSwapHere
+                          ? `CONFIRM`
+                          : "SWAP"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
 
-              {/* 🔥 DROP BUTTON (Only after draft is complete) */}
-              {league?.draft_complete && (
-                <View style={{ marginLeft: 10 }}>
-                  <Button
-                    title="DROP"
-                    color="red"
+                {/* DROP BUTTON (Only after draft is complete) */}
+                {league?.draft_complete && (
+                  <TouchableOpacity
+                    style={styles.dropButton}
                     onPress={() => handleDropPlayer(player.player_id)}
-                  />
-                </View>
-              )}
-            </View>
-          )}
+                  >
+                    <Text
+                      style={[styles.buttonText, { color: COLORS.lightRed }]}
+                    >
+                      DROP
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={styles.playerPoints}>
+              {Number(player.points || 0).toFixed(1)}
+            </Text>
+            <Text
+              style={{
+                color: COLORS.faint,
+                fontSize: 10,
+                fontFamily: TYPOGRAPHY.body,
+              }}
+            >
+              PTS
+            </Text>
+          </View>
         </View>
       );
     }
+
+    // --- LOGIC FOR EMPTY SLOTS ---
     const isFreeAgency = league?.draft_complete;
     const isMyTurnToDraft = league?.draft && isUserTurn;
+
+    // YOUR ORIGINAL CONDITIONALS:
     if (league?.draft && isUserTurn && isViewingOwnTeam) {
       return (
-        <View key={`${label}-${index}`} style={{ marginVertical: 5 }}>
-          <Button
-            title={`Draft ${label}`}
-            onPress={() => handleAddPlayerNav(searchPos)}
-          />
-        </View>
-      );
-    }
-    if (isViewingOwnTeam && (isMyTurnToDraft || isFreeAgency)) {
-      return (
-        <View key={`${label}-${index}`} style={{ marginVertical: 5 }}>
-          <Button
-            title={isFreeAgency ? `Add ${label}` : `Draft ${label}`}
-            onPress={() => handleAddPlayerNav(searchPos)}
-            color={isFreeAgency ? "green" : "#007bff"}
-          />
-        </View>
+        <TouchableOpacity
+          key={`${label}-${index}`}
+          style={styles.emptySlot}
+          onPress={() => handleAddPlayerNav(searchPos)}
+        >
+          <Text
+            style={[
+              styles.emptyText,
+              { color: COLORS.lightBlue, fontFamily: TYPOGRAPHY.subtitle },
+            ]}
+          >
+            + DRAFT {label.toUpperCase()}
+          </Text>
+        </TouchableOpacity>
       );
     }
 
+    if (isViewingOwnTeam && (isMyTurnToDraft || isFreeAgency)) {
+      return (
+        <TouchableOpacity
+          key={`${label}-${index}`}
+          style={styles.emptySlot}
+          onPress={() => handleAddPlayerNav(searchPos)}
+        >
+          <Text
+            style={[
+              styles.emptyText,
+              { color: isFreeAgency ? "#28a745" : COLORS.lightBlue },
+            ]}
+          >
+            +{" "}
+            {isFreeAgency
+              ? `ADD ${label.toUpperCase()}`
+              : `DRAFT ${label.toUpperCase()}`}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+
+    // FALLBACK VIEW
     return (
-      <View key={`${label}-${index}`} style={{ paddingVertical: 5 }}>
-        <Text style={{ color: "gray" }}>
-          {label}:{" "}
+      <View key={`${label}-${index}`} style={styles.emptySlot}>
+        <Text style={styles.emptyText}>
+          {label.toUpperCase()}:{" "}
           {league?.draft
-            ? "(Waiting...)"
+            ? "WAITING..."
             : league?.draft_complete
-              ? "(Empty)"
-              : "(Draft not started)"}
+              ? "EMPTY"
+              : "DRAFT NOT STARTED"}
         </Text>
       </View>
     );
@@ -569,115 +759,108 @@ export default function TeamPage() {
   if (!team) return <Text>Team not found</Text>;
 
   return (
-    <ScrollView
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      {/* {!league?.draft ? (
-        <View style={{ backgroundColor: "#ffc107", padding: 10 }}>
-          <Text style={{ textAlign: "center", fontWeight: "bold" }}>
-            Waiting for Commissioner to start the draft...
+    <View style={styles.page}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primaryBlue}
+          />
+        }
+      >
+        {/* 1. TEAM HEADER */}
+        <View style={styles.topBar}>
+          <Text style={styles.topBarText}>{team.name}</Text>
+          <Text style={styles.ownerText}>
+            OWNER: {team.username?.toUpperCase()}
           </Text>
-        </View>
-      ) : (
-        <View
-          style={{
-            backgroundColor: isUserTurn ? "#28a745" : "#17a2b8",
-            padding: 10,
-          }}
-        >
-          <Text
-            style={{ textAlign: "center", color: "white", fontWeight: "bold" }}
-          >
-            {isUserTurn
-              ? "YOUR TURN TO PICK!"
-              : `Round ${round} - Picking: ${teamOnClock?.username}`}
-          </Text>
-        </View>
-      )} */}
-      {/* <Button
-        title={refreshing ? "Syncing..." : "Manual Sync (Browser Test)"}
-        onPress={onRefresh}
-        disabled={refreshing}
-      /> */}
-      <Text>{team.name}</Text>
-      <Text>Owner: {team.username}</Text>
-      {/* <Text>Total Team Points</Text>
-      <Text>{totalPoints.toFixed(1)} pts</Text> */}
-      <View>
-        <Text>Season Total Score</Text>
-        <Text>
-          {Number(team.total_season_points || 0).toFixed(1)} <Text>pts</Text>
-        </Text>
-      </View>
-      <View>
-        <View>
-          <Text>Today's Active Starters:</Text>
-          <Text>{totalDailyPoints.toFixed(1)} pts</Text>
         </View>
 
-        <Button
-          title={refreshing ? "Syncing..." : "Sync Points"}
-          onPress={onRefresh}
-          disabled={refreshing}
-        />
-      </View>
-      <View>
-        <Text>CATCHERS</Text>
+        {/* 2. SCOREBOARD SECTION */}
+        <View style={styles.scoreBoard}>
+          <View>
+            <Text style={styles.scoreLabel}>SEASON TOTAL</Text>
+            <Text style={styles.scoreValue}>
+              {Number(team.total_season_points || 0).toFixed(1)}
+            </Text>
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={styles.scoreLabel}>TODAY'S ACTIVE</Text>
+            <Text
+              style={[
+                styles.scoreValue,
+                { fontSize: 24, color: COLORS.lightBlue },
+              ]}
+            >
+              {totalDailyPoints.toFixed(1)}
+            </Text>
+            <TouchableOpacity
+              onPress={onRefresh}
+              disabled={refreshing}
+              style={{ marginTop: 5 }}
+            >
+              <Text
+                style={{
+                  color: COLORS.faint,
+                  fontSize: 10,
+                  fontFamily: TYPOGRAPHY.subtitle,
+                }}
+              >
+                {refreshing ? "SYNCING..." : "SYNC NOW ↻"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 3. ROSTER GROUPS */}
+        <View style={styles.categoryHeader}>
+          <View style={styles.redStripe} />
+          <Text style={styles.categoryHeaderText}>CATCHERS</Text>
+        </View>
         {renderSlot("Catcher", "Catcher", 0)}
         {renderSlot("Catcher", "Catcher", 1)}
 
-        <Text>INFIELD</Text>
-        {renderSlot("Infielder", "Infielder", 0)}
-        {renderSlot("Infielder", "Infielder", 1)}
-        {renderSlot("Infielder", "Infielder", 2)}
-        {renderSlot("Infielder", "Infielder", 3)}
-        {renderSlot("Infielder", "Infielder", 4)}
-        {renderSlot("Infielder", "Infielder", 5)}
+        <View style={styles.categoryHeader}>
+          <View style={styles.redStripe} />
+          <Text style={styles.categoryHeaderText}>INFIELD</Text>
+        </View>
+        {[0, 1, 2, 3, 4, 5].map((i) => renderSlot("Infielder", "Infielder", i))}
 
-        <Text>OUTFIELD</Text>
+        <View style={styles.categoryHeader}>
+          <View style={styles.redStripe} />
+          <Text style={styles.categoryHeaderText}>OUTFIELD</Text>
+        </View>
         {[0, 1, 2, 3, 4].map((i) => renderSlot("Outfielder", "Outfielder", i))}
 
-        <Text>UTILITY</Text>
+        <View style={styles.categoryHeader}>
+          <View style={styles.redStripe} />
+          <Text style={styles.categoryHeaderText}>UTILITY</Text>
+        </View>
         {renderSlot("Designated Hitter", "Designated Hitter")}
 
-        <Text>PITCHERS</Text>
+        <View style={styles.categoryHeader}>
+          <View style={styles.redStripe} />
+          <Text style={styles.categoryHeaderText}>PITCHERS</Text>
+        </View>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) =>
           renderSlot("Pitcher", "Pitcher", i),
         )}
 
-        <Text>BENCH</Text>
+        {/* 4. BENCH SECTION */}
+        <View
+          style={[
+            styles.categoryHeader,
+            { backgroundColor: COLORS.cardAlt, marginTop: 30 },
+          ]}
+        >
+          <View
+            style={[styles.redStripe, { backgroundColor: COLORS.primaryBlue }]}
+          />
+          <Text style={styles.categoryHeaderText}>BENCH</Text>
+        </View>
 
-        {/* {players
-          .filter((p) => p.slot === "Bench")
-          .map((player) => (
-            <View key={player.id} style={{ paddingVertical: 5 }}>
-              <Text>
-                {player.name} ({player.position})
-              </Text>
-
-              {isViewingOwnTeam && (
-                <>
-                  {[
-                    "Catcher",
-                    "Outfielder",
-                    "Infielder",
-                    "Pitcher",
-                    "Designated Hitter",
-                  ]
-                    .filter((slot) => isValidForSlot(player.position, slot))
-                    .map((slot) => (
-                      <Button
-                        key={slot}
-                        title={`Add to ${slot}`}
-                        onPress={() => updateSlot(player.player_id, slot)}
-                      />
-                    ))}
-                </>
-              )}
-            </View>
-          ))} */}
         {[0, 1, 2, 3, 4].map((i) => {
           const benchPlayers = players.filter(
             (p) => p.slot === "Bench" || p.slot === "Any",
@@ -690,84 +873,103 @@ export default function TeamPage() {
             const canSwapHere =
               swappingPlayer &&
               !isThisSelected &&
-              swappingPlayer.slot !== "Bench" && // Cannot start a swap FROM bench TO bench
+              swappingPlayer.slot !== "Bench" &&
               swappingPlayer.slot !== "Any" &&
               isValidForSlot(player.position, swappingPlayer.slot);
 
-            console.log("swap player", swappingPlayer?.slot);
-
             return (
-              <View
-                key={`bench-slot-${i}`}
-                style={{
-                  paddingVertical: 10,
-                  borderBottomWidth: 1,
-                  borderColor: "#eee",
-                }}
-              >
-                <Text>
-                  Bench: {player.name} ({player.position})
-                </Text>
+              <View key={`bench-slot-${i}`} style={styles.playerCard}>
+                <View style={styles.playerInfo}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "/player",
+                        params: { playerID: player.player_id },
+                      })
+                    }
+                  >
+                    <Text
+                      style={[styles.playerName, { color: COLORS.lightBlue }]}
+                    >
+                      {player.name.toUpperCase()} ➔
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.playerPosition}>
+                    BENCH • {player.position}
+                  </Text>
 
-                {isViewingOwnTeam && !league?.draft && (
-                  <Button
-                    title={
-                      isThisSelected
-                        ? "CANCEL"
-                        : canSwapHere
-                          ? "SWAP HERE"
-                          : "SWAP"
-                    }
-                    onPress={() => {
-                      if (canSwapHere) performSwap(swappingPlayer, player);
-                      else setSwappingPlayer(isThisSelected ? null : player);
-                    }}
-                    color={
-                      canSwapHere
-                        ? "orange"
-                        : isThisSelected
-                          ? "red"
-                          : "#007bff"
-                    }
-                    // disabled={swappingPlayer && !isThisSelected && !canSwapHere}
-                  />
-                )}
+                  {isViewingOwnTeam && !league?.draft && (
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity
+                        style={[
+                          styles.swapButton,
+                          canSwapHere && { backgroundColor: "orange" },
+                          isThisSelected && { backgroundColor: "red" },
+                        ]}
+                        onPress={() => {
+                          if (canSwapHere) performSwap(swappingPlayer, player);
+                          else
+                            setSwappingPlayer(isThisSelected ? null : player);
+                        }}
+                      >
+                        <Text style={styles.buttonText}>
+                          {isThisSelected
+                            ? "CANCEL"
+                            : canSwapHere
+                              ? "SWAP HERE"
+                              : "SWAP"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.playerPoints}>
+                  {Number(player.points || 0).toFixed(1)}
+                </Text>
               </View>
             );
           }
 
-          // If slot is empty, show the Draft button
           if (league?.draft && isUserTurn && isViewingOwnTeam) {
             return (
-              <View key={`bench-empty-${i}`} style={{ marginVertical: 5 }}>
-                <Button
-                  title={`Draft Bench Spot ${i + 1}`}
-                  onPress={() => handleAddPlayerNav("Any")}
-                />
-              </View>
+              <TouchableOpacity
+                key={`bench-empty-${i}`}
+                style={styles.emptySlot}
+                onPress={() => handleAddPlayerNav("Any")}
+              >
+                <Text style={[styles.emptyText, { color: COLORS.lightBlue }]}>
+                  + DRAFT BENCH SLOT {i + 1}
+                </Text>
+              </TouchableOpacity>
             );
           }
 
           return (
-            <View key={`bench-waiting-${i}`} style={{ paddingVertical: 5 }}>
-              <Text style={{ color: "gray" }}>Bench Slot {i + 1}: Empty</Text>
+            <View key={`bench-waiting-${i}`} style={styles.emptySlot}>
+              <Text style={styles.emptyText}>BENCH SLOT {i + 1}: EMPTY</Text>
             </View>
           );
         })}
 
-        <Button
-          title="Trades"
+        <TouchableOpacity
+          style={styles.tradeButton}
           onPress={() =>
             router.push({
               pathname: "/trades/[teamId]",
-              params: {
-                teamId: String(id),
-                leagueId: leagueId,
-              },
+              params: { teamId: String(id), leagueId: leagueId },
             })
           }
-        />
-      </View>
-    </ScrollView>
+        >
+          <Text style={[styles.buttonText, { fontSize: 16 }]}>
+            OPEN TRADE CENTER
+          </Text>
+        </TouchableOpacity>
+
+        {/* Spacer to prevent Navbar overlapping content */}
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      <Navbar />
+    </View>
   );
 }
