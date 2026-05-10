@@ -1,16 +1,8 @@
 import { router } from "expo-router";
 
-import {
-  TouchableOpacity,
-  Text,
-  View,
-  StyleSheet,
-} from "react-native";
+import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
 
-import {
-  COLORS,
-  TYPOGRAPHY,
-} from "../constants/theme";
+import { COLORS, TYPOGRAPHY } from "../constants/theme";
 
 export default function Index() {
   return (
@@ -18,30 +10,22 @@ export default function Index() {
       <View style={styles.card}>
         <View style={styles.stripe} />
 
-        <Text style={styles.title}>
-          AMERICA'S FAVORITE FANTASY PASSTIME
-        </Text>
+        <Text style={styles.title}>AMERICA'S FAVORITE FANTASY PASTIME</Text>
 
-        <Text style={styles.subtitle}>
-          Fantasy Baseball Manager
-        </Text>
+        <Text style={styles.subtitle}>Fantasy Baseball Manager</Text>
 
         <TouchableOpacity
           onPress={() => router.push("/login")}
           style={styles.primaryButton}
         >
-          <Text style={styles.buttonText}>
-            LOGIN
-          </Text>
+          <Text style={styles.buttonText}>LOGIN</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push("/signup")}
           style={styles.redButton}
         >
-          <Text style={styles.buttonText}>
-            CREATE ACCOUNT
-          </Text>
+          <Text style={styles.buttonText}>CREATE ACCOUNT</Text>
         </TouchableOpacity>
       </View>
     </View>
