@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Button, FlatList, ScrollView, Text, View } from "react-native";
+import Navbar from "./navbar";
 
 interface Team {
   id: string;
@@ -94,9 +95,8 @@ function Home() {
 
   const fetchTeams = async () => {
     try {
-      const response = await fetch(
-        "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams",
-      );
+      const response = await fetch("http://localhost:5001/api/mlb/teams");
+
       const data: TeamResponse = await response.json();
       const mlbTeams = data.sports[0].leagues[0].teams;
       setTeams(mlbTeams);
@@ -106,9 +106,7 @@ function Home() {
   };
   const fetchGames = async () => {
     try {
-      const response = await fetch(
-        "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard",
-      );
+      const response = await fetch("http://localhost:5001/api/mlb/scoreboard");
       const data: GameResponse = await response.json();
       const mlbGames = data.events;
       // console.log(response);
@@ -138,9 +136,9 @@ function Home() {
       <ScrollView horizontal={true}>
         {/* <ScrollView> */}
         {games.map((game) => (
-          <View key={game.id} style={{height: 400}}>
+          <View key={game.id} style={{ height: 400 }}>
             <Button
-              title={`${game.competitions[0].competitors[1].team.abbreviation} vs ${game.competitions[0].competitors[0].team.abbreviation}` }
+              title={`${game.competitions[0].competitors[1].team.abbreviation} vs ${game.competitions[0].competitors[0].team.abbreviation}`}
               onPress={() =>
                 router.push({
                   pathname: "/game",
@@ -191,6 +189,7 @@ function Home() {
           </View>
         )}
       />
+      <Navbar />
     </>
   );
 }

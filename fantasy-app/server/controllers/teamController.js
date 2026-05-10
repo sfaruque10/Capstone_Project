@@ -6,7 +6,19 @@ const getTeamById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query("SELECT * FROM teams WHERE id = $1", [id]);
+    const result = await pool.query(
+      `SELECT 
+        t.*, 
+        u.username,
+        COALESCE(
+          (SELECT SUM(points) FROM daily_scores WHERE team_id = t.id), 
+          0
+        ) AS total_season_points
+      FROM teams t
+      JOIN users u ON t.user_id = u.id
+      WHERE t.id = $1`,
+      [id],
+    );
 
     //Error catch for nonexistent team
     if (result.rows.length === 0) {
@@ -24,14 +36,15 @@ const getTeamById = async (req, res) => {
 const getUserTeams = async (req, res) => {
   try {
     //Gather team details from user id
-    const result = await pool.query(`SELECT
+    const result = await pool.query(
+      `SELECT
       t.*,
       l.name AS league_name
     FROM teams t
     JOIN leagues l
      ON t.league_id = l.id
     WHERE t.user_id = $1`,
-    [req.user.id]
+      [req.user.id],
     );
 
     res.json(result.rows);
@@ -144,6 +157,9 @@ const syncTeamPoints = async (req, res) => {
   console.log(`\n[1] --- Sync Triggered for Team ID: ${id} ---`);
 
   try {
+    await pool.query("UPDATE team_players SET points = 0 WHERE team_id = $1", [
+      id,
+    ]);
     const scoreboard = await axios.get(
       "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard",
     );
@@ -193,20 +209,52 @@ const syncTeamPoints = async (req, res) => {
                   totalPoints += statValue * rules[key];
                 }
               });
-
               if (totalPoints !== 0) {
-                await pool.query(
-                  `UPDATE team_players 
-             SET points = $1 
-             WHERE team_id = $2 AND player_id = $3`,
-                  [totalPoints, id, espnId],
+                // 1. Find internal player ID and current slot
+                const playerInfo = await pool.query(
+                  `SELECT p.id as internal_id, tp.slot 
+                   FROM players p 
+                   JOIN team_players tp ON p.id = tp.player_id 
+                   WHERE p.id = $1 AND tp.team_id = $2`,
+                  [espnId, id],
                 );
+
+                if (playerInfo.rows.length > 0) {
+                  const { internal_id, slot } = playerInfo.rows[0];
+                  // 3. If STARTER: Bank to Season Total and Log History
+                  // 4. ONLY bank the DIFFERENCE to the season total
+                  // This prevents double-counting on refresh
+                  await pool.query(
+                    "UPDATE team_players SET points = $1 WHERE team_id = $2 AND player_id = $3",
+                    [totalPoints, id, internal_id],
+                  );
+
+                  // 5. Update/Insert the history record for today
+                  await pool.query(
+                    `INSERT INTO daily_scores (team_id, player_id, points, slot, day)
+                     VALUES ($1, $2, $3, $4, CURRENT_DATE)
+                     ON CONFLICT (team_id, player_id, day) 
+                     DO UPDATE SET points = EXCLUDED.points, slot = EXCLUDED.slot`,
+                    [id, internal_id, totalPoints, slot],
+                  );
+                }
               }
             }),
           );
         }
       }
     }
+    await pool.query(
+      `UPDATE teams 
+       SET total_season_points = (
+         SELECT COALESCE(SUM(points), 0) 
+         FROM daily_scores 
+         WHERE team_id = $1 
+         AND slot != 'Bench'
+       )
+       WHERE id = $1`,
+      [id],
+    );
     console.log(`[5] --- Sync Finished ---\n`);
     res.json({ message: "Sync complete" });
   } catch (err) {

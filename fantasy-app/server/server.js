@@ -8,9 +8,10 @@ const leagueRoutes = require("./routes/leagueRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const cors = require("cors");
 const tradeRoutes = require("./routes/tradeRoutes");
-
+const cron = require("node-cron");
+const { syncAllLeagues } = require("./controllers/leagueController");
 const app = express();
-
+const axios = require("axios");
 app.use(cors());
 
 app.use(express.json());
@@ -39,10 +40,39 @@ app.use("/teams", teamRoutes);
 
 //Route for trade methods and pages
 app.use("/trades", tradeRoutes);
-
+app.get("/api/mlb/teams", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams",
+    );
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch teams" });
+  }
+});
+app.get("/api/mlb/scoreboard", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard",
+    );
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch scoreboard" });
+  }
+});
 //Test call for middleware functionality
 app.get("/protected", authMiddleware, (req, res) => {
   res.json({ message: "You are authenticated", user: req.user });
+});
+
+cron.schedule("0 3 * * *", async () => {
+  console.log("--- CRON: Starting Daily Points Sync ---");
+  try {
+    await syncAllLeagues();
+    console.log("--- CRON: Daily Sync Completed Successfully ---");
+  } catch (err) {
+    console.error("--- CRON: Daily Sync Failed ---", err.message);
+  }
 });
 
 const PORT = 5001;

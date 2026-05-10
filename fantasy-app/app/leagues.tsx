@@ -1,7 +1,15 @@
-import React, { useEffect, useState, } from 'react';
-import { View, Text, ActivityIndicator, Button } from 'react-native';
-import { getLeagues, League } from '../services/leagues';
-import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Button,
+  ScrollView,
+} from "react-native";
+import { getLeagues, League } from "../services/leagues";
+import { useRouter } from "expo-router";
+import Navbar from "./navbar";
+import { COLORS } from "../constants/theme";
 
 const LeaguesScreen = () => {
   const [leagues, setLeagues] = useState<League[]>([]);
@@ -14,7 +22,7 @@ const LeaguesScreen = () => {
         const data = await getLeagues();
         setLeagues(data);
       } catch (err) {
-        console.error('Error fetching leagues:', err);
+        console.error("Error fetching leagues:", err);
       } finally {
         setLoading(false);
       }
@@ -26,27 +34,32 @@ const LeaguesScreen = () => {
   if (loading) return <ActivityIndicator />;
 
   return (
-    <View>
+    <View style={{ flex: 1, backgroundColor: COLORS.background }}>
+      <ScrollView>
         <Button
-            title="Create League"
-            onPress={() => router.push('/createLeague')}
+          title="Create League"
+          onPress={() => router.push("/createLeague")}
         />
         <Button
-            title="Join League"
-            onPress={() => router.push('/joinLeague')}
+          title="Join League"
+          onPress={() => router.push("/joinLeague")}
         />
-      {leagues.length === 0 ? (
-        <Text>No leagues yet</Text>
-      ) : (
-        leagues.map((league) => (
-          <Text key={league.id} onPress={() => router.push(`/leagues/${league.id}`)}>
-            {league.name}
-          </Text>
-        ))
-      )}
+        {leagues.length === 0 ? (
+          <Text>No leagues yet</Text>
+        ) : (
+          leagues.map((league) => (
+            <Text
+              key={league.id}
+              onPress={() => router.push(`/leagues/${league.id}`)}
+            >
+              {league.name}
+            </Text>
+          ))
+        )}
+      </ScrollView>
+      <Navbar />
     </View>
   );
 };
 
 export default LeaguesScreen;
-

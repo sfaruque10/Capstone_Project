@@ -16,10 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import API from "../services/api";
 import { getUserTeams } from "../services/user";
 
-import {
-  COLORS,
-  TYPOGRAPHY,
-} from "../constants/theme";
+import { COLORS, TYPOGRAPHY } from "../constants/theme";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -47,9 +44,7 @@ export default function ProfilePage() {
           const allTrades = [];
 
           for (const team of teamData) {
-            const tradeRes = await API.get(
-              `/trades/team/${team.id}`
-            );
+            const tradeRes = await API.get(`/trades/team/${team.id}`);
 
             allTrades.push(...tradeRes.data);
           }
@@ -57,15 +52,13 @@ export default function ProfilePage() {
           const sortedTrades = allTrades.sort(
             (a, b) =>
               new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
+              new Date(a.created_at).getTime(),
           );
 
           setRecentTrades(sortedTrades.slice(0, 5));
         }
-
       } catch (err) {
         console.error(err);
-
       } finally {
         setLoading(false);
       }
@@ -83,10 +76,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator
-          size="large"
-          color={COLORS.primaryRed}
-        />
+        <ActivityIndicator size="large" color={COLORS.primaryRed} />
       </View>
     );
   }
@@ -100,9 +90,7 @@ export default function ProfilePage() {
     >
       {/* TOP BAR */}
       <View style={styles.topBar}>
-        <Text style={styles.topBarText}>
-          {user?.username}
-        </Text>
+        <Text style={styles.topBarText}>{user?.username}</Text>
       </View>
 
       <View style={styles.mainContent}>
@@ -111,45 +99,28 @@ export default function ProfilePage() {
           <View style={styles.stripe} />
 
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.username?.charAt(0)}
-            </Text>
+            <Text style={styles.avatarText}>{user?.username?.charAt(0)}</Text>
           </View>
 
-          <Text style={styles.username}>
-            {user?.username}
-          </Text>
+          <Text style={styles.username}>{user?.username}</Text>
 
-          <Text style={styles.subtitle}>
-            Fantasy Baseball Manager
-          </Text>
+          <Text style={styles.subtitle}>Fantasy Baseball Manager</Text>
 
           <View style={styles.infoSection}>
-            <Text style={styles.infoLabel}>
-              EMAIL
-            </Text>
+            <Text style={styles.infoLabel}>EMAIL</Text>
 
-            <Text style={styles.infoText}>
-              {user?.email}
-            </Text>
+            <Text style={styles.infoText}>{user?.email}</Text>
           </View>
 
           <TouchableOpacity
             onPress={() => router.push("/leagues")}
             style={styles.primaryButton}
           >
-            <Text style={styles.buttonText}>
-              BROWSE LEAGUES
-            </Text>
+            <Text style={styles.buttonText}>BROWSE LEAGUES</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={logout}
-            style={styles.redButton}
-          >
-            <Text style={styles.buttonText}>
-              LOGOUT
-            </Text>
+          <TouchableOpacity onPress={logout} style={styles.redButton}>
+            <Text style={styles.buttonText}>LOGOUT</Text>
           </TouchableOpacity>
         </View>
 
@@ -157,24 +128,15 @@ export default function ProfilePage() {
         <View style={styles.rightSide}>
           {/* TEAMS */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              MY TEAMS
-            </Text>
+            <Text style={styles.sectionTitle}>MY TEAMS</Text>
 
             {teams.map((team) => (
-              <View
-                key={team.id}
-                style={styles.teamCard}
-              >
+              <View key={team.id} style={styles.teamCard}>
                 <View style={styles.stripe} />
 
-                <Text style={styles.teamName}>
-                  {team.name}
-                </Text>
+                <Text style={styles.teamName}>{team.name}</Text>
 
-                <Text style={styles.leagueName}>
-                  {team.league_name}
-                </Text>
+                <Text style={styles.leagueName}>{team.league_name}</Text>
 
                 <View style={styles.buttonRow}>
                   <TouchableOpacity
@@ -189,9 +151,7 @@ export default function ProfilePage() {
                     }
                     style={styles.primaryButtonSmall}
                   >
-                    <Text style={styles.buttonText}>
-                      TEAM
-                    </Text>
+                    <Text style={styles.buttonText}>TEAM</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -205,15 +165,13 @@ export default function ProfilePage() {
                     }
                     style={styles.secondaryButtonSmall}
                   >
-                    <Text style={styles.buttonText}>
-                      LEAGUE
-                    </Text>
+                    <Text style={styles.buttonText}>LEAGUE</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={() =>
                       router.push({
-                        pathname: `/trades/${team.id}`,
+                        pathname: `/trades/[teamId]`,
                         params: {
                           teamId: team.id,
                           leagueId: team.league_id,
@@ -222,9 +180,7 @@ export default function ProfilePage() {
                     }
                     style={styles.redButtonSmall}
                   >
-                    <Text style={styles.buttonText}>
-                      TRADES
-                    </Text>
+                    <Text style={styles.buttonText}>TRADES</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -233,18 +189,11 @@ export default function ProfilePage() {
 
           {/* ACTIVITY */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              RECENT ACTIVITY
-            </Text>
+            <Text style={styles.sectionTitle}>RECENT ACTIVITY</Text>
 
             {recentTrades.map((trade) => (
-              <View
-                key={trade.id}
-                style={styles.activityCard}
-              >
-                <Text style={styles.activityTitle}>
-                  TRADE #{trade.id}
-                </Text>
+              <View key={trade.id} style={styles.activityCard}>
+                <Text style={styles.activityTitle}>TRADE #{trade.id}</Text>
 
                 <Text style={styles.activityText}>
                   Team {trade.from_team_id}
@@ -260,8 +209,8 @@ export default function ProfilePage() {
                         trade.status === "accepted"
                           ? COLORS.primaryBlue
                           : trade.status === "rejected"
-                          ? COLORS.primaryRed
-                          : "#475569",
+                            ? COLORS.primaryRed
+                            : "#475569",
                     },
                   ]}
                 >

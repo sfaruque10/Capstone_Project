@@ -5,6 +5,7 @@ export interface Team {
   name: string;
   username: string; // owner username
   user_id: number;
+  total_season_points: number;
 }
 
 export const getTeamById = async (teamId: number): Promise<Team> => {
@@ -58,11 +59,11 @@ export interface TeamPlayer {
 export const editPlayerSlot = async (
   teamId: number,
   playerId: number,
-  newSlot: string
+  newSlot: string,
 ) => {
   const response = await API.patch(`/teams/${teamId}/players`, {
     slot: newSlot,
   });
 
   return response.data;
-}
+};

@@ -29,7 +29,7 @@ interface Items {
   age: number;
   headshot: Headshot;
   jersey: string;
-  parent: Parent;
+  position: Position;
 }
 interface Headshot {
   href: string;
@@ -37,7 +37,7 @@ interface Headshot {
 interface Position {
   displayName: string;
   abbreviation: string;
-  position: Position;
+  parent: Parent;
 }
 
 interface Parent {
@@ -90,7 +90,7 @@ function PositionPlayer() {
 
           const groupsToGrab = data.athletes?.filter((group: Athletes) => {
             const groupName = group.position.toLowerCase().trim();
-
+            if (target === "any") return true;
             if (target === "designated hitter" || target === "dh") {
               return [
                 "catchers",
@@ -140,6 +140,7 @@ function PositionPlayer() {
           else if (target === "catcher") targetAbbreviation = "C";
 
           return items.filter((player: any) => {
+            if (target === "any") return true;
             if (
               target === "infielder" ||
               target === "outfielder" ||
@@ -172,9 +173,25 @@ function PositionPlayer() {
   );
   const handleAddPlayer = async (player: Items) => {
     if (isSubmitting) return;
+    const isPitcher =
+      // player.parent.displayName === "P" ||
+      player.position.parent.displayName === "Pitcher" ||
+      player.position.parent?.displayName?.toLowerCase().includes("pitchers");
+    const target = position.toLowerCase().trim();
+    if (target !== "any" && target !== "bench") {
+      if (target === "pitcher" && !isPitcher) {
+        alert("You cannot put a Hitter in a Pitcher slot.");
+        return;
+      }
+      if (target !== "pitcher" && isPitcher) {
+        alert("You cannot put a Pitcher in a Hitter slot.");
+        return;
+      }
+    }
     setIsSubmitting(true);
     try {
-      await addPlayerToTeam(Number(teamId), player, Number(lID), position);
+      const slotToSave = target === "any" ? "Bench" : position;
+      await addPlayerToTeam(Number(teamId), player, Number(lID), slotToSave);
       router.back();
     } catch (error) {
       console.error(error);

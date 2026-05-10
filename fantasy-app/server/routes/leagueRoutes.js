@@ -7,6 +7,11 @@ const {
   getLeagueById,
   getLeagueTeams,
   getLeagueDraftedPlayers,
+  lockLeaguePermanently,
+  startDraft,
+  checkDraftCompletion,
+  getLeagueStandings,
+  getAvailableLeagues,
 } = require("../controllers/leagueController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -14,6 +19,11 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.post("/", authMiddleware, createLeague);
 router.post("/join", authMiddleware, joinLeague);
 router.get("/", authMiddleware, getLeagues);
+router.get("/available", authMiddleware, getAvailableLeagues);
+router.patch("/:id/toggle-lock", authMiddleware, lockLeaguePermanently);
+router.patch("/:id/start-draft", authMiddleware, startDraft);
+router.get("/:id/check-completion", authMiddleware, checkDraftCompletion);
+router.get("/:id/standings", authMiddleware, getLeagueStandings);
 //Keep /: at end of path
 router.get("/:id", authMiddleware, getLeagueById);
 router.get("/:id/teams", authMiddleware, getLeagueTeams);
