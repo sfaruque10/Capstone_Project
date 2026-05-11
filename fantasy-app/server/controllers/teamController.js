@@ -314,7 +314,7 @@ const syncTeamPoints = async (req, res) => {
 };
 
 module.exports = {
-  getTeamById,g
+  getTeamById,
   getUserTeams,
   getTeamPlayers,
   addPlayerToTeam,
