@@ -186,61 +186,79 @@ function Home() {
           showsHorizontalScrollIndicator={false}
           style={styles.tickerScroll}
         >
-          {games.map((game) => {
-            const team1 = game.competitions[0].competitors[1];
-            const team0 = game.competitions[0].competitors[0];
-            const isFinal = game.competitions[0].status.type.state === "post";
+          {[...games]
+            .sort((a, b) => {
+              const statePriority: { [key: string]: number } = {
+                in: 1,
+                pre: 2,
+                post: 3,
+              };
 
-            return (
-              <TouchableOpacity
-                key={game.id}
-                style={styles.gameCard}
-                onPress={() =>
-                  router.push({
-                    pathname: "/game",
-                    params: { gameID: game.id },
-                  })
-                }
-              >
-                <View style={styles.gameRow}>
-                  <View style={styles.teamLogoContainer}>
-                    <Image
-                      source={{ uri: team1.team.logo }}
-                      style={styles.tickerLogo}
-                      contentFit="contain"
-                    />
-                    <Text style={styles.tickerTeam}>
-                      {team1.team.abbreviation}
-                    </Text>
-                  </View>
-                  <Text style={styles.tickerScore}>{team1.score}</Text>
-                </View>
+              const stateA = a.competitions[0].status.type.state;
+              const stateB = b.competitions[0].status.type.state;
 
-                <View style={styles.gameRow}>
-                  <View style={styles.teamLogoContainer}>
-                    <Image
-                      source={{ uri: team0.team.logo }}
-                      style={styles.tickerLogo}
-                      contentFit="contain"
-                    />
-                    <Text style={styles.tickerTeam}>
-                      {team0.team.abbreviation}
-                    </Text>
-                  </View>
-                  <Text style={styles.tickerScore}>{team0.score}</Text>
-                </View>
+              return (
+                (statePriority[stateA] || 4) - (statePriority[stateB] || 4)
+              );
+            })
+            .map((game) => {
+              const team1 = game.competitions[0].competitors[1];
+              const team0 = game.competitions[0].competitors[0];
+              const isFinal = game.competitions[0].status.type.state === "post";
 
-                <Text
-                  style={[
-                    styles.gameStatus,
-                    isFinal && { color: COLORS.primaryRed },
-                  ]}
+              return (
+                <TouchableOpacity
+                  key={game.id}
+                  style={styles.gameCard}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/game",
+                      params: { gameID: game.id },
+                    })
+                  }
                 >
-                  {isFinal ? "FINAL" : game.competitions[0].status.type.detail}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  {/* ... rest of your existing card JSX ... */}
+                  <View style={styles.gameRow}>
+                    <View style={styles.teamLogoContainer}>
+                      <Image
+                        source={{ uri: team1.team.logo }}
+                        style={styles.tickerLogo}
+                        contentFit="contain"
+                      />
+                      <Text style={styles.tickerTeam}>
+                        {team1.team.abbreviation}
+                      </Text>
+                    </View>
+                    <Text style={styles.tickerScore}>{team1.score}</Text>
+                  </View>
+
+                  <View style={styles.gameRow}>
+                    <View style={styles.teamLogoContainer}>
+                      <Image
+                        source={{ uri: team0.team.logo }}
+                        style={styles.tickerLogo}
+                        contentFit="contain"
+                      />
+                      <Text style={styles.tickerTeam}>
+                        {team0.team.abbreviation}
+                      </Text>
+                    </View>
+                    <Text style={styles.tickerScore}>{team0.score}</Text>
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.gameStatus,
+                      isFinal && { color: COLORS.primaryRed },
+                    ]}
+                  >
+                    {isFinal
+                      ? "FINAL"
+                      : game.competitions[0].status.type.detail}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
         </ScrollView>
 
         {/* 3. Team Directory */}

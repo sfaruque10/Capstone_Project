@@ -71,6 +71,8 @@ interface Players {
   statistics: Statistics[];
 }
 interface Statistics {
+  type: string;
+  labels: string[];
   athletes: Athletes[];
 }
 interface Athletes {
@@ -207,26 +209,91 @@ function Game() {
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {/* 2. BOXSCORE SECTIONS */}
-        <View style={styles.sectionHeader}>
-          <View style={styles.stripe} />
-          <Text style={styles.sectionTitle}>Batting Leaders</Text>
-        </View>
+        {game?.boxscore.players.map((teamData, teamIdx) => {
+          // Determine which team name to show
+          const teamInfo = game.boxscore.teams[teamIdx].team;
 
-        {game?.boxscore.players[0].statistics[0].athletes
-          .slice(0, 5)
-          .map((stat, idx) => (
-            <View key={idx} style={styles.playerRow}>
-              <Text style={styles.playerName}>{stat.athlete.displayName}</Text>
-              <View style={styles.statLine}>
-                {stat.stats.slice(0, 4).map((s, i) => (
-                  <Text key={i} style={styles.statItem}>
-                    {s}
-                  </Text>
-                ))}
+          return (
+            <View key={teamInfo.id} style={{ marginBottom: 30 }}>
+              {/* TEAM HEADER */}
+              <View style={styles.sectionHeader}>
+                <View
+                  style={[
+                    styles.stripe,
+                    {
+                      backgroundColor:
+                        teamIdx === 0 ? COLORS.primaryRed : COLORS.primaryBlue,
+                    },
+                  ]}
+                />
+                <Text style={styles.sectionTitle}>
+                  {teamInfo.displayName.toUpperCase()}
+                </Text>
               </View>
+
+              {/* STAT CATEGORIES (Batting then Pitching) */}
+              {teamData.statistics.map((statGroup, groupIdx) => {
+                // Skip fielding/info groups, focus on batting and pitching
+                if (
+                  statGroup.type !== "batting" &&
+                  statGroup.type !== "pitching"
+                )
+                  return null;
+
+                return (
+                  <View key={groupIdx} style={{ marginBottom: 20 }}>
+                    <Text style={styles.statTypeHeader}>
+                      {statGroup.type.toUpperCase()}
+                    </Text>
+
+                    {/* TABLE HEADER LABELS */}
+                    <View style={styles.playerRowHeader}>
+                      <Text style={[styles.columnLabel, { flex: 1 }]}>
+                        PLAYER
+                      </Text>
+                      {statGroup.labels.slice(0, 5).map((label, i) => (
+                        <Text key={i} style={styles.columnLabelCenter}>
+                          {label}
+                        </Text>
+                      ))}
+                    </View>
+
+                    {/* ALL PLAYERS IN THIS GROUP */}
+                    {statGroup.athletes.map((playerStat, pIdx) => (
+                      <TouchableOpacity
+                        key={pIdx}
+                        style={styles.playerRow}
+                        onPress={() =>
+                          router.push({
+                            pathname: "/player",
+                            params: { playerID: playerStat.athlete.id },
+                          })
+                        }
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.playerName}>
+                            {playerStat.athlete.displayName}
+                          </Text>
+                          <Text style={styles.playerPositionMini}>
+                            {playerStat.position.abbreviation}
+                          </Text>
+                        </View>
+
+                        <View style={styles.statLine}>
+                          {playerStat.stats.slice(0, 5).map((val, i) => (
+                            <Text key={i} style={styles.statItem}>
+                              {val}
+                            </Text>
+                          ))}
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                );
+              })}
             </View>
-          ))}
+          );
+        })}
       </ScrollView>
 
       <Navbar />
@@ -354,11 +421,46 @@ const styles = StyleSheet.create({
     fontFamily: TYPOGRAPHY.subtitle,
     fontSize: 14,
   },
-  statLine: { flexDirection: "row", gap: 15 },
+  statLine: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   statItem: {
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 12,
+    width: 35, // Fixed width for alignment
+    textAlign: "center",
+  },
+  statTypeHeader: {
     color: COLORS.lightBlue,
-    fontFamily: TYPOGRAPHY.title,
-    fontSize: 14,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 12,
+    marginBottom: 10,
+    marginLeft: 10,
+    letterSpacing: 1,
+  },
+  playerRowHeader: {
+    flexDirection: "row",
+    paddingHorizontal: 15,
+    marginBottom: 5,
+  },
+  columnLabel: {
+    color: COLORS.faint,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 10,
+  },
+  columnLabelCenter: {
+    color: COLORS.faint,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 10,
+    width: 35,
+    textAlign: "center",
+  },
+  playerPositionMini: {
+    color: COLORS.faint,
+    fontSize: 10,
+    fontFamily: TYPOGRAPHY.body,
   },
 });
 
