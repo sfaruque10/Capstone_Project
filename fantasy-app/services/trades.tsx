@@ -1,13 +1,31 @@
 import API from "./api";
 
+export interface TradePlayer {
+  id: number;
+  name: string;
+  position: string;
+}
+
 export interface Trade {
   id: number;
+
   league_id: number;
+
   from_team_id: number;
   to_team_id: number;
+
+  from_team_name: string;
+  to_team_name: string;
+
   status: string;
-  created_at?: string;
+
+  created_at: string;
+
+  offered_players: TradePlayer[];
+
+  requested_players: TradePlayer[];
 }
+
 
 export const getTradesForTeam = async (
   teamId: number

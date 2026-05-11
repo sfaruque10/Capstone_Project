@@ -191,12 +191,12 @@ export default function ProfilePage() {
 
               {recentTrades.map((trade) => (
                 <View key={trade.id} style={styles.activityCard}>
-                  <Text style={styles.activityTitle}>TRADE #{trade.id}</Text>
+                  <Text style={styles.activityTitle}>TRADE</Text>
 
                   <Text style={styles.activityText}>
-                    Team {trade.from_team_id}
+                    {trade.from_team_name}
                     {" ↔ "}
-                    Team {trade.to_team_id}
+                    {trade.to_team_name}
                   </Text>
 
                   <View
