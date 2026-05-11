@@ -16,28 +16,28 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-<<<<<<< Updated upstream
-    <Stack screenOptions={{ headerShown: false }}>
-      <Tabs screenOptions={{ headerShown: false }}>
-        <Tabs.Screen name="home" />
-        <Tabs.Screen name="league" />
-        <Tabs.Screen
-          name="index"
-          options={{ href: null, tabBarStyle: { display: "none" } }}
-        />
-        <Tabs.Screen
-          name="login"
-          options={{ href: null, tabBarStyle: { display: "none" } }}
-        />
-        <Tabs.Screen
-          name="signup"
-          options={{ href: null, tabBarStyle: { display: "none" } }}
-        />
-        <Tabs.Screen name="navbar" options={{ href: null }} />
-        <Tabs.Screen name="team" options={{ href: null }} />
-        <Tabs.Screen name="player" options={{ href: null }} />
-      </Tabs>
-=======
+    // <<<<<<< Updated upstream
+    //     <Stack screenOptions={{ headerShown: false }}>
+    //       <Tabs screenOptions={{ headerShown: false }}>
+    //         <Tabs.Screen name="home" />
+    //         <Tabs.Screen name="league" />
+    //         <Tabs.Screen
+    //           name="index"
+    //           options={{ href: null, tabBarStyle: { display: "none" } }}
+    //         />
+    //         <Tabs.Screen
+    //           name="login"
+    //           options={{ href: null, tabBarStyle: { display: "none" } }}
+    //         />
+    //         <Tabs.Screen
+    //           name="signup"
+    //           options={{ href: null, tabBarStyle: { display: "none" } }}
+    //         />
+    //         <Tabs.Screen name="navbar" options={{ href: null }} />
+    //         <Tabs.Screen name="team" options={{ href: null }} />
+    //         <Tabs.Screen name="player" options={{ href: null }} />
+    //       </Tabs>
+    // =======
     <Stack
       screenOptions={{
         // 1. Show the header so we get the arrow
@@ -47,7 +47,7 @@ export default function RootLayout() {
           backgroundColor: COLORS.card,
         },
         headerShadowVisible: false, // Removes the thin line under the header
-        headerTintColor: COLORS.lightBlue, // 🔥 Colors the Back Arrow
+        headerTintColor: COLORS.lightBlue,
 
         // 3. Remove the Title text
         headerTitle: "",
@@ -76,7 +76,7 @@ export default function RootLayout() {
          If your player or team screens are pushed onto the stack, 
          they will now show the blue arrow and NO title automatically.
       */}
->>>>>>> Stashed changes
+      {/* >>>>>>> Stashed changes */}
     </Stack>
   );
 }

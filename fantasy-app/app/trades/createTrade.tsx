@@ -21,7 +21,7 @@ import { createTrade } from "../../services/trades";
 import { COLORS, TYPOGRAPHY } from "../../constants/theme";
 import Navbar from "../navbar";
 
-import Navbar from "../navbar";
+// import Navbar from "../navbar";
 
 export default function CreateTradePage() {
   const { teamId, leagueId } = useLocalSearchParams();
@@ -158,24 +158,24 @@ export default function CreateTradePage() {
   }
 
   return (
-<<<<<<< Updated upstream
-    <View style={styles.page}>
-=======
+    // <<<<<<< Updated upstream
+    //     <View style={styles.page}>
+    // =======
     <View style={{ flex: 1, backgroundColor: COLORS.background }}>
->>>>>>> Stashed changes
+      {/* >>>>>>> Stashed changes */}
       <ScrollView
         style={styles.page}
         contentContainerStyle={{
           padding: 20,
-<<<<<<< Updated upstream
-=======
+          // <<<<<<< Updated upstream
+          // =======
           paddingBottom: 100,
->>>>>>> Stashed changes
+          // >>>>>>> Stashed changes
         }}
       >
         <View style={styles.section}>
           <View style={styles.stripe} />
-<<<<<<< Updated upstream
+          {/* <<<<<<< Updated upstream
 
           <Text style={styles.title}>
             CREATE TRADE
@@ -184,30 +184,30 @@ export default function CreateTradePage() {
           <Text style={styles.subtitle}>
             SELECT OPPONENT
           </Text>
-=======
+======= */}
 
           <Text style={styles.title}>CREATE TRADE</Text>
 
           <Text style={styles.subtitle}>SELECT OPPONENT</Text>
->>>>>>> Stashed changes
+          {/* >>>>>>> Stashed changes */}
 
           {teams.map((team) => (
             <TouchableOpacity
               key={team.id}
-<<<<<<< Updated upstream
-              onPress={() =>
-                chooseOpponent(team.id)
-              }
-              style={[
-                styles.selectableCard,
-                targetTeam === team.id &&
-                  styles.selectableCardActive,
-              ]}
-            >
-              <Text style={styles.playerName}>
-                {team.name}
-              </Text>
-=======
+              // <<<<<<< Updated upstream
+              //               onPress={() =>
+              //                 chooseOpponent(team.id)
+              //               }
+              //               style={[
+              //                 styles.selectableCard,
+              //                 targetTeam === team.id &&
+              //                   styles.selectableCardActive,
+              //               ]}
+              //             >
+              //               <Text style={styles.playerName}>
+              //                 {team.name}
+              //               </Text>
+              // =======
               onPress={() => chooseOpponent(team.id)}
               style={[
                 styles.selectableCard,
@@ -215,13 +215,13 @@ export default function CreateTradePage() {
               ]}
             >
               <Text style={styles.playerName}>{team.name}</Text>
->>>>>>> Stashed changes
+              {/* >>>>>>> Stashed changes */}
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={styles.section}>
-<<<<<<< Updated upstream
+          {/* <<<<<<< Updated upstream
           <Text style={styles.subtitle}>
             PLAYERS YOU OFFER
           </Text>
@@ -232,36 +232,38 @@ export default function CreateTradePage() {
               offeredPlayers,
               setOfferedPlayers
             )
-=======
+======= */}
           <Text style={styles.subtitle}>PLAYERS YOU OFFER</Text>
 
-          {myPlayers.map((player) =>
-            renderSelectablePlayer(player, offeredPlayers, setOfferedPlayers),
->>>>>>> Stashed changes
+          {myPlayers.map(
+            (player) =>
+              renderSelectablePlayer(player, offeredPlayers, setOfferedPlayers),
+            // >>>>>>> Stashed changes
           )}
         </View>
 
         {targetTeam && (
           <View style={styles.section}>
-<<<<<<< Updated upstream
+            {/* <<<<<<< Updated upstream
             <Text style={styles.subtitle}>
               PLAYERS YOU REQUEST
             </Text>
-=======
+======= */}
             <Text style={styles.subtitle}>PLAYERS YOU REQUEST</Text>
->>>>>>> Stashed changes
+            {/* >>>>>>> Stashed changes */}
 
-            {theirPlayers.map((player) =>
-              renderSelectablePlayer(
-                player,
-                requestedPlayers,
-<<<<<<< Updated upstream
-                setRequestedPlayers
-              )
-=======
-                setRequestedPlayers,
-              ),
->>>>>>> Stashed changes
+            {theirPlayers.map(
+              (player) =>
+                renderSelectablePlayer(
+                  player,
+                  requestedPlayers,
+                  // <<<<<<< Updated upstream
+                  //                 setRequestedPlayers
+                  //               )
+                  // =======
+                  setRequestedPlayers,
+                ),
+              // >>>>>>> Stashed changes
             )}
           </View>
         )}
@@ -272,13 +274,13 @@ export default function CreateTradePage() {
           style={styles.submitButton}
         >
           <Text style={styles.buttonText}>
-<<<<<<< Updated upstream
+            {/* <<<<<<< Updated upstream
             {submitting
               ? "SUBMITTING..."
               : "SUBMIT TRADE"}
-=======
+======= */}
             {submitting ? "SUBMITTING..." : "SUBMIT TRADE"}
->>>>>>> Stashed changes
+            {/* >>>>>>> Stashed changes */}
           </Text>
         </TouchableOpacity>
       </ScrollView>

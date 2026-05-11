@@ -21,7 +21,7 @@ import {
 import { COLORS, TYPOGRAPHY } from "../../constants/theme";
 import Navbar from "../navbar";
 
-import Navbar from "../navbar";
+// import Navbar from "../navbar";
 
 export default function TradesPage() {
   const { teamId, leagueId } = useLocalSearchParams();
@@ -90,26 +90,26 @@ export default function TradesPage() {
   }
 
   return (
-<<<<<<< Updated upstream
-    <View style={styles.page}>
-=======
+    // <<<<<<< Updated upstream
+    //     <View style={styles.page}>
+    // =======
     <View style={{ flex: 1, backgroundColor: COLORS.background }}>
->>>>>>> Stashed changes
+      {/* >>>>>>> Stashed changes */}
       <ScrollView
         style={styles.page}
         contentContainerStyle={{
           padding: 20,
-<<<<<<< Updated upstream
-=======
+          // <<<<<<< Updated upstream
+          // =======
           paddingBottom: 100,
->>>>>>> Stashed changes
+          // >>>>>>> Stashed changes
         }}
       >
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.stripe} />
 
-<<<<<<< Updated upstream
+          {/* <<<<<<< Updated upstream
           <Text style={styles.title}>
             Trades
           </Text>
@@ -133,7 +133,7 @@ export default function TradesPage() {
           </TouchableOpacity>
         </View>
 
-=======
+======= */}
           <Text style={styles.title}>Trades</Text>
 
           <TouchableOpacity
@@ -152,7 +152,7 @@ export default function TradesPage() {
           </TouchableOpacity>
         </View>
 
->>>>>>> Stashed changes
+        {/* >>>>>>> Stashed changes */}
         {/* TRADE LIST */}
         {trades.map((trade) => (
           <View
@@ -163,16 +163,16 @@ export default function TradesPage() {
                 borderColor:
                   trade.status === "accepted"
                     ? COLORS.primaryBlue
-<<<<<<< Updated upstream
-                    : trade.status ===
-                      "rejected"
-                    ? COLORS.primaryRed
-                    : COLORS.border,
-=======
-                    : trade.status === "rejected"
+                    : // <<<<<<< Updated upstream
+                      //                     : trade.status ===
+                      //                       "rejected"
+                      //                     ? COLORS.primaryRed
+                      //                     : COLORS.border,
+                      // =======
+                      trade.status === "rejected"
                       ? COLORS.primaryRed
                       : COLORS.border,
->>>>>>> Stashed changes
+                // >>>>>>> Stashed changes
               },
             ]}
           >
@@ -181,26 +181,26 @@ export default function TradesPage() {
                 styles.tradeStripe,
                 {
                   backgroundColor:
-<<<<<<< Updated upstream
-                    trade.status ===
-                    "accepted"
-                      ? COLORS.primaryBlue
-                      : trade.status ===
-                        "rejected"
-                      ? COLORS.primaryRed
-                      : "#64748B",
-=======
+                    // <<<<<<< Updated upstream
+                    //                     trade.status ===
+                    //                     "accepted"
+                    //                       ? COLORS.primaryBlue
+                    //                       : trade.status ===
+                    //                         "rejected"
+                    //                       ? COLORS.primaryRed
+                    //                       : "#64748B",
+                    // =======
                     trade.status === "accepted"
                       ? COLORS.primaryBlue
                       : trade.status === "rejected"
                         ? COLORS.primaryRed
                         : "#64748B",
->>>>>>> Stashed changes
+                  // >>>>>>> Stashed changes
                 },
               ]}
             />
 
-<<<<<<< Updated upstream
+            {/* <<<<<<< Updated upstream
             <Text style={styles.tradeTitle}>
               TRADE #{trade.id}
             </Text>
@@ -241,7 +241,7 @@ export default function TradesPage() {
               {trade.to_team_name}
             </Text>
 
-=======
+======= */}
             <Text style={styles.tradeTitle}>TRADE #{trade.id}</Text>
 
             <View style={{ marginBottom: 14 }}>
@@ -270,27 +270,27 @@ export default function TradesPage() {
               {trade.to_team_name}
             </Text>
 
->>>>>>> Stashed changes
+            {/* >>>>>>> Stashed changes */}
             <View
               style={[
                 styles.statusBadge,
                 {
                   backgroundColor:
-<<<<<<< Updated upstream
-                    trade.status ===
-                    "accepted"
-                      ? COLORS.primaryBlue
-                      : trade.status ===
-                        "rejected"
-                      ? COLORS.primaryRed
-                      : "#475569",
-=======
+                    // <<<<<<< Updated upstream
+                    //                     trade.status ===
+                    //                     "accepted"
+                    //                       ? COLORS.primaryBlue
+                    //                       : trade.status ===
+                    //                         "rejected"
+                    //                       ? COLORS.primaryRed
+                    //                       : "#475569",
+                    // =======
                     trade.status === "accepted"
                       ? COLORS.primaryBlue
                       : trade.status === "rejected"
                         ? COLORS.primaryRed
                         : "#475569",
->>>>>>> Stashed changes
+                  // >>>>>>> Stashed changes
                 },
               ]}
             >
@@ -300,37 +300,37 @@ export default function TradesPage() {
             </View>
 
             {trade.status === "pending" &&
-<<<<<<< Updated upstream
-              trade.to_team_id ===
-                Number(teamId) && (
-                <View style={styles.buttonRow}>
-                  <TouchableOpacity
-                    onPress={() =>
-                      handleAccept(trade.id)
-                    }
-                    style={
-                      styles.primaryButtonSmall
-                    }
-                  >
-                    <Text
-                      style={styles.buttonText}
-                    >
-                      ACCEPT
-                    </Text>
-                  </TouchableOpacity>
+              // <<<<<<< Updated upstream
+              //               trade.to_team_id ===
+              //                 Number(teamId) && (
+              //                 <View style={styles.buttonRow}>
+              //                   <TouchableOpacity
+              //                     onPress={() =>
+              //                       handleAccept(trade.id)
+              //                     }
+              //                     style={
+              //                       styles.primaryButtonSmall
+              //                     }
+              //                   >
+              //                     <Text
+              //                       style={styles.buttonText}
+              //                     >
+              //                       ACCEPT
+              //                     </Text>
+              //                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() =>
-                      handleReject(trade.id)
-                    }
-                    style={styles.redButtonSmall}
-                  >
-                    <Text
-                      style={styles.buttonText}
-                    >
-                      REJECT
-                    </Text>
-=======
+              //                   <TouchableOpacity
+              //                     onPress={() =>
+              //                       handleReject(trade.id)
+              //                     }
+              //                     style={styles.redButtonSmall}
+              //                   >
+              //                     <Text
+              //                       style={styles.buttonText}
+              //                     >
+              //                       REJECT
+              //                     </Text>
+              // =======
               trade.to_team_id === Number(teamId) && (
                 <View style={styles.buttonRow}>
                   <TouchableOpacity
@@ -345,7 +345,7 @@ export default function TradesPage() {
                     style={styles.redButtonSmall}
                   >
                     <Text style={styles.buttonText}>REJECT</Text>
->>>>>>> Stashed changes
+                    {/* >>>>>>> Stashed changes */}
                   </TouchableOpacity>
                 </View>
               )}
