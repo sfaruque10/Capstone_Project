@@ -881,6 +881,19 @@ export default function TeamPage() {
       </View>
     );
   };
+
+  const benchPlayers = players.filter(
+    (p) =>
+      p.slot === "Bench" ||
+      p.slot === "Any"
+  );
+
+  const MIN_BENCH_SLOTS = 5;
+
+  const totalBenchSlots = Math.max(
+    MIN_BENCH_SLOTS,
+    benchPlayers.length
+  );
   const totalPoints = players
     .filter((p) => p.slot !== "Bench") // Only sum up starters
     .reduce((sum, player) => sum + (Number(player.points) || 0), 0);
@@ -1009,99 +1022,112 @@ export default function TeamPage() {
           <Text style={styles.categoryHeaderText}>BENCH</Text>
         </View>
 
-        {players
-          .filter((p) => p.slot === "Bench" || p.slot === "Any")
-          .map((player) => {
-            const isThisSelected =
-              swappingPlayer?.player_id === player.player_id;
+        {Array.from({
+          length: totalBenchSlots,
+        }).map((_, i) => {
+          const player = benchPlayers[i];
 
-            const canSwapHere =
-              swappingPlayer &&
-              !isThisSelected &&
-              swappingPlayer.slot !== "Bench" &&
-              swappingPlayer.slot !== "Any" &&
-              isValidForSlot(player.position, swappingPlayer.slot);
-
+          if (!player) {
             return (
-              <View key={`bench-${player.player_id}`} style={styles.playerCard}>
-                <View style={styles.playerInfo}>
-                  <TouchableOpacity
-                    onPress={() =>
-                      router.push({
-                        pathname: "/player",
-                        params: { playerID: player.player_id }, // Just the ID is enough now!
-                      })
-                    }
-                  >
-                    <Text
-                      style={[
-                        styles.playerName,
-                        {
-                          color: COLORS.lightBlue,
-                        },
-                      ]}
-                    >
-                      {player.name.toUpperCase()} ➔
-                    </Text>
-                  </TouchableOpacity>
-
-                  <Text style={styles.playerPosition}>
-                    BENCH • {player.position}
-                  </Text>
-
-                  {isViewingOwnTeam && (
-                    <View style={styles.actionRow}>
-                      {/* SWAP BUTTON (Visible if not drafting) */}
-                      {!league?.draft && (
-                        <TouchableOpacity
-                          style={[
-                            styles.swapButton,
-                            canSwapHere && { backgroundColor: "orange" },
-                            isThisSelected && { backgroundColor: "red" },
-                          ]}
-                          onPress={() => {
-                            if (canSwapHere)
-                              performSwap(swappingPlayer, player);
-                            else
-                              setSwappingPlayer(isThisSelected ? null : player);
-                          }}
-                        >
-                          <Text style={styles.buttonText}>
-                            {isThisSelected
-                              ? "CANCEL"
-                              : canSwapHere
-                                ? "SWAP HERE"
-                                : "SWAP"}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-
-                      {/* 🔥 DROP BUTTON (Added: Only visible after draft) */}
-                      {league?.draft_complete && (
-                        <TouchableOpacity
-                          style={styles.dropButton}
-                          onPress={() => handleDropPlayer(player.player_id)}
-                        >
-                          <Text
-                            style={[
-                              styles.buttonText,
-                              { color: COLORS.lightRed },
-                            ]}
-                          >
-                            DROP
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  )}
-                </View>
-
-                <Text style={styles.playerPoints}>
-                  {Number(player.points || 0).toFixed(1)}
+              <View
+                key={`empty-bench-${i}`}
+                style={styles.emptySlot}
+              >
+                <Text style={styles.emptyText}>
+                  EMPTY BENCH SLOT
                 </Text>
               </View>
             );
-          })}
+          }
+          const isThisSelected =
+            swappingPlayer?.player_id === player.player_id;
+
+          const canSwapHere =
+            swappingPlayer &&
+            !isThisSelected &&
+            swappingPlayer.slot !== "Bench" &&
+            swappingPlayer.slot !== "Any" &&
+            isValidForSlot(player.position, swappingPlayer.slot);
+
+          return (
+            <View key={`bench-${player.player_id}`} style={styles.playerCard}>
+              <View style={styles.playerInfo}>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push({
+                      pathname: "/player",
+                      params: { playerID: player.player_id }, // Just the ID is enough now!
+                    })
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.playerName,
+                      {
+                        color: COLORS.lightBlue,
+                      },
+                    ]}
+                  >
+                    {player.name.toUpperCase()} ➔
+                  </Text>
+                </TouchableOpacity>
+
+                <Text style={styles.playerPosition}>
+                  BENCH • {player.position}
+                </Text>
+
+                {isViewingOwnTeam && (
+                  <View style={styles.actionRow}>
+                    {/* SWAP BUTTON (Visible if not drafting) */}
+                    {!league?.draft && (
+                      <TouchableOpacity
+                        style={[
+                          styles.swapButton,
+                          canSwapHere && { backgroundColor: "orange" },
+                          isThisSelected && { backgroundColor: "red" },
+                        ]}
+                        onPress={() => {
+                          if (canSwapHere)
+                            performSwap(swappingPlayer, player);
+                          else
+                            setSwappingPlayer(isThisSelected ? null : player);
+                        }}
+                      >
+                        <Text style={styles.buttonText}>
+                          {isThisSelected
+                            ? "CANCEL"
+                            : canSwapHere
+                              ? "SWAP HERE"
+                              : "SWAP"}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {/* 🔥 DROP BUTTON (Added: Only visible after draft) */}
+                    {league?.draft_complete && (
+                      <TouchableOpacity
+                        style={styles.dropButton}
+                        onPress={() => handleDropPlayer(player.player_id)}
+                      >
+                        <Text
+                          style={[
+                            styles.buttonText,
+                            { color: COLORS.lightRed },
+                          ]}
+                        >
+                          DROP
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+              </View>
+              <Text style={styles.playerPoints}>
+                {Number(player.points || 0).toFixed(1)}
+              </Text>
+            </View>
+          );
+        })}
         {isViewingOwnTeam &&
           (league?.draft_complete || (league?.draft && isUserTurn)) && (
             <View style={{ marginTop: 5 }}>
