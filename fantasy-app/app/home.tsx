@@ -112,8 +112,8 @@ function Home() {
     setLoading(true); // Spinner ON
     try {
       const [teamsRes, gamesRes] = await Promise.all([
-        fetch(`${URL}/api/mlb/teams`),
-        fetch(`${URL}/api/mlb/scoreboard`),
+        fetch(`${URL}api/mlb/teams`),
+        fetch(`${URL}api/mlb/scoreboard`),
       ]);
 
       const teamsData: TeamResponse = await teamsRes.json();
