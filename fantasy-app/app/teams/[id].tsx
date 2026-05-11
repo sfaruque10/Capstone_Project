@@ -915,36 +915,49 @@ export default function TeamPage() {
                     BENCH • {player.position}
                   </Text>
 
-                  {isViewingOwnTeam && !league?.draft && (
+                  {isViewingOwnTeam && (
                     <View style={styles.actionRow}>
-                      <TouchableOpacity
-                        style={[
-                          styles.swapButton,
+                      {/* SWAP BUTTON (Visible if not drafting) */}
+                      {!league?.draft && (
+                        <TouchableOpacity
+                          style={[
+                            styles.swapButton,
+                            canSwapHere && { backgroundColor: "orange" },
+                            isThisSelected && { backgroundColor: "red" },
+                          ]}
+                          onPress={() => {
+                            if (canSwapHere)
+                              performSwap(swappingPlayer, player);
+                            else
+                              setSwappingPlayer(isThisSelected ? null : player);
+                          }}
+                        >
+                          <Text style={styles.buttonText}>
+                            {isThisSelected
+                              ? "CANCEL"
+                              : canSwapHere
+                                ? "SWAP HERE"
+                                : "SWAP"}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
 
-                          canSwapHere && {
-                            backgroundColor: "orange",
-                          },
-
-                          isThisSelected && {
-                            backgroundColor: "red",
-                          },
-                        ]}
-                        onPress={() => {
-                          if (canSwapHere) {
-                            performSwap(swappingPlayer, player);
-                          } else {
-                            setSwappingPlayer(isThisSelected ? null : player);
-                          }
-                        }}
-                      >
-                        <Text style={styles.buttonText}>
-                          {isThisSelected
-                            ? "CANCEL"
-                            : canSwapHere
-                              ? "SWAP HERE"
-                              : "SWAP"}
-                        </Text>
-                      </TouchableOpacity>
+                      {/* 🔥 DROP BUTTON (Added: Only visible after draft) */}
+                      {league?.draft_complete && (
+                        <TouchableOpacity
+                          style={styles.dropButton}
+                          onPress={() => handleDropPlayer(player.player_id)}
+                        >
+                          <Text
+                            style={[
+                              styles.buttonText,
+                              { color: COLORS.lightRed },
+                            ]}
+                          >
+                            DROP
+                          </Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   )}
                 </View>
