@@ -359,6 +359,28 @@ const acceptTrade = async (req, res) => {
     }
 
     for (const row of playersRes.rows) {
+      const ownershipCheck = await client.query(
+        `
+        SELECT *
+        FROM team_players
+        WHERE
+          team_id = $1
+          AND player_id = $2
+        `,
+        [row.team_id, row.player_id]
+      );
+
+      if (ownershipCheck.rows.length === 0) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          error:
+            "Trade invalid: a player is no longer on the expected team",
+        });
+      }
+    }
+
+    for (const row of playersRes.rows) {
       const newTeam =
         row.team_id === trade.from_team_id
           ? trade.to_team_id
