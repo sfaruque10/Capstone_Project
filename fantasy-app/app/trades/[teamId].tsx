@@ -31,6 +31,8 @@ import {
   TYPOGRAPHY,
 } from "../../constants/theme";
 
+import Navbar from "../navbar";
+
 export default function TradesPage() {
   const { teamId, leagueId } = useLocalSearchParams();
 
@@ -114,168 +116,171 @@ export default function TradesPage() {
   }
 
   return (
-    <ScrollView
-      style={styles.page}
-      contentContainerStyle={{
-        padding: 20,
-      }}
-    >
-      {/* HEADER */}
-      <View style={styles.header}>
-        <View style={styles.stripe} />
+    <View style={styles.page}>
+      <ScrollView
+        style={styles.page}
+        contentContainerStyle={{
+          padding: 20,
+        }}
+      >
+        {/* HEADER */}
+        <View style={styles.header}>
+          <View style={styles.stripe} />
 
-        <Text style={styles.title}>
-          Trades
-        </Text>
-
-        <TouchableOpacity
-          onPress={() =>
-            router.push({
-              pathname:
-                "/trades/createTrade",
-              params: {
-                teamId,
-                leagueId,
-              },
-            })
-          }
-          style={styles.primaryButton}
-        >
-          <Text style={styles.buttonText}>
-            CREATE TRADE
+          <Text style={styles.title}>
+            Trades
           </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* TRADE LIST */}
-      {trades.map((trade) => (
-        <View
-          key={trade.id}
-          style={[
-            styles.tradeCard,
-            {
-              borderColor:
-                trade.status === "accepted"
-                  ? COLORS.primaryBlue
-                  : trade.status ===
-                    "rejected"
-                  ? COLORS.primaryRed
-                  : COLORS.border,
-            },
-          ]}
-        >
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname:
+                  "/trades/createTrade",
+                params: {
+                  teamId,
+                  leagueId,
+                },
+              })
+            }
+            style={styles.primaryButton}
+          >
+            <Text style={styles.buttonText}>
+              CREATE TRADE
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* TRADE LIST */}
+        {trades.map((trade) => (
           <View
+            key={trade.id}
             style={[
-              styles.tradeStripe,
+              styles.tradeCard,
               {
-                backgroundColor:
-                  trade.status ===
-                  "accepted"
+                borderColor:
+                  trade.status === "accepted"
                     ? COLORS.primaryBlue
                     : trade.status ===
                       "rejected"
                     ? COLORS.primaryRed
-                    : "#64748B",
-              },
-            ]}
-          />
-
-          <Text style={styles.tradeTitle}>
-            TRADE #{trade.id}
-          </Text>
-
-          <View style={{ marginBottom: 14 }}>
-            <Text style={styles.tradeSectionTitle}>
-              OFFERING
-            </Text>
-
-            {trade.offered_players.map((player: any) => (
-              <Text
-                key={player.id}
-                style={styles.playerText}
-              >
-                • {player.name} ({player.position})
-              </Text>
-            ))}
-          </View>
-
-          <View style={{ marginBottom: 16 }}>
-            <Text style={styles.tradeSectionTitle}>
-              REQUESTING
-            </Text>
-
-            {trade.requested_players.map((player: any) => (
-              <Text
-                key={player.id}
-                style={styles.playerText}
-              >
-                • {player.name} ({player.position})
-              </Text>
-            ))}
-          </View>
-
-          <Text style={styles.tradeText}>
-            {trade.from_team_name}
-            {" ↔ "}
-            {trade.to_team_name}
-          </Text>
-
-          <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor:
-                  trade.status ===
-                  "accepted"
-                    ? COLORS.primaryBlue
-                    : trade.status ===
-                      "rejected"
-                    ? COLORS.primaryRed
-                    : "#475569",
+                    : COLORS.border,
               },
             ]}
           >
-            <Text style={styles.statusText}>
-              {trade.status.toUpperCase()}
+            <View
+              style={[
+                styles.tradeStripe,
+                {
+                  backgroundColor:
+                    trade.status ===
+                    "accepted"
+                      ? COLORS.primaryBlue
+                      : trade.status ===
+                        "rejected"
+                      ? COLORS.primaryRed
+                      : "#64748B",
+                },
+              ]}
+            />
+
+            <Text style={styles.tradeTitle}>
+              TRADE #{trade.id}
             </Text>
+
+            <View style={{ marginBottom: 14 }}>
+              <Text style={styles.tradeSectionTitle}>
+                OFFERING
+              </Text>
+
+              {trade.offered_players.map((player: any) => (
+                <Text
+                  key={player.id}
+                  style={styles.playerText}
+                >
+                  • {player.name} ({player.position})
+                </Text>
+              ))}
+            </View>
+
+            <View style={{ marginBottom: 16 }}>
+              <Text style={styles.tradeSectionTitle}>
+                REQUESTING
+              </Text>
+
+              {trade.requested_players.map((player: any) => (
+                <Text
+                  key={player.id}
+                  style={styles.playerText}
+                >
+                  • {player.name} ({player.position})
+                </Text>
+              ))}
+            </View>
+
+            <Text style={styles.tradeText}>
+              {trade.from_team_name}
+              {" ↔ "}
+              {trade.to_team_name}
+            </Text>
+
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor:
+                    trade.status ===
+                    "accepted"
+                      ? COLORS.primaryBlue
+                      : trade.status ===
+                        "rejected"
+                      ? COLORS.primaryRed
+                      : "#475569",
+                },
+              ]}
+            >
+              <Text style={styles.statusText}>
+                {trade.status.toUpperCase()}
+              </Text>
+            </View>
+
+            {trade.status === "pending" &&
+              trade.to_team_id ===
+                Number(teamId) && (
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleAccept(trade.id)
+                    }
+                    style={
+                      styles.primaryButtonSmall
+                    }
+                  >
+                    <Text
+                      style={styles.buttonText}
+                    >
+                      ACCEPT
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleReject(trade.id)
+                    }
+                    style={styles.redButtonSmall}
+                  >
+                    <Text
+                      style={styles.buttonText}
+                    >
+                      REJECT
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
           </View>
-
-          {trade.status === "pending" &&
-            trade.to_team_id ===
-              Number(teamId) && (
-              <View style={styles.buttonRow}>
-                <TouchableOpacity
-                  onPress={() =>
-                    handleAccept(trade.id)
-                  }
-                  style={
-                    styles.primaryButtonSmall
-                  }
-                >
-                  <Text
-                    style={styles.buttonText}
-                  >
-                    ACCEPT
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() =>
-                    handleReject(trade.id)
-                  }
-                  style={styles.redButtonSmall}
-                >
-                  <Text
-                    style={styles.buttonText}
-                  >
-                    REJECT
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-        </View>
-      ))}
-    </ScrollView>
+        ))}
+      </ScrollView>
+      <Navbar />
+    </View>
   );
 }
 

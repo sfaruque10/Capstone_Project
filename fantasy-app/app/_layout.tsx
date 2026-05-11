@@ -17,8 +17,8 @@ export default function RootLayout() {
     return null;
   }
   return (
-    <Stack>
-      <Tabs>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Tabs screenOptions={{ headerShown: false }}>
         <Tabs.Screen name="home" />
         <Tabs.Screen name="league" />
         <Tabs.Screen

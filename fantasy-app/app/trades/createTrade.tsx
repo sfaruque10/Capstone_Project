@@ -35,6 +35,8 @@ import {
   TYPOGRAPHY,
 } from "../../constants/theme";
 
+import Navbar from "../navbar";
+
 export default function CreateTradePage() {
   const { teamId, leagueId } =
     useLocalSearchParams();
@@ -234,84 +236,87 @@ export default function CreateTradePage() {
   }
 
   return (
-    <ScrollView
-      style={styles.page}
-      contentContainerStyle={{
-        padding: 20,
-      }}
-    >
-      <View style={styles.section}>
-        <View style={styles.stripe} />
-
-        <Text style={styles.title}>
-          CREATE TRADE
-        </Text>
-
-        <Text style={styles.subtitle}>
-          SELECT OPPONENT
-        </Text>
-
-        {teams.map((team) => (
-          <TouchableOpacity
-            key={team.id}
-            onPress={() =>
-              chooseOpponent(team.id)
-            }
-            style={[
-              styles.selectableCard,
-              targetTeam === team.id &&
-                styles.selectableCardActive,
-            ]}
-          >
-            <Text style={styles.playerName}>
-              {team.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.subtitle}>
-          PLAYERS YOU OFFER
-        </Text>
-
-        {myPlayers.map((player) =>
-          renderSelectablePlayer(
-            player,
-            offeredPlayers,
-            setOfferedPlayers
-          )
-        )}
-      </View>
-
-      {targetTeam && (
+    <View style={styles.page}>
+      <ScrollView
+        style={styles.page}
+        contentContainerStyle={{
+          padding: 20,
+        }}
+      >
         <View style={styles.section}>
-          <Text style={styles.subtitle}>
-            PLAYERS YOU REQUEST
+          <View style={styles.stripe} />
+
+          <Text style={styles.title}>
+            CREATE TRADE
           </Text>
 
-          {theirPlayers.map((player) =>
+          <Text style={styles.subtitle}>
+            SELECT OPPONENT
+          </Text>
+
+          {teams.map((team) => (
+            <TouchableOpacity
+              key={team.id}
+              onPress={() =>
+                chooseOpponent(team.id)
+              }
+              style={[
+                styles.selectableCard,
+                targetTeam === team.id &&
+                  styles.selectableCardActive,
+              ]}
+            >
+              <Text style={styles.playerName}>
+                {team.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>
+            PLAYERS YOU OFFER
+          </Text>
+
+          {myPlayers.map((player) =>
             renderSelectablePlayer(
               player,
-              requestedPlayers,
-              setRequestedPlayers
+              offeredPlayers,
+              setOfferedPlayers
             )
           )}
         </View>
-      )}
 
-      <TouchableOpacity
-        onPress={submitTrade}
-        disabled={submitting}
-        style={styles.submitButton}
-      >
-        <Text style={styles.buttonText}>
-          {submitting
-            ? "SUBMITTING..."
-            : "SUBMIT TRADE"}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {targetTeam && (
+          <View style={styles.section}>
+            <Text style={styles.subtitle}>
+              PLAYERS YOU REQUEST
+            </Text>
+
+            {theirPlayers.map((player) =>
+              renderSelectablePlayer(
+                player,
+                requestedPlayers,
+                setRequestedPlayers
+              )
+            )}
+          </View>
+        )}
+
+        <TouchableOpacity
+          onPress={submitTrade}
+          disabled={submitting}
+          style={styles.submitButton}
+        >
+          <Text style={styles.buttonText}>
+            {submitting
+              ? "SUBMITTING..."
+              : "SUBMIT TRADE"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+      <Navbar />
+    </View>
   );
 }
 
