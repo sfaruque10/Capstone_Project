@@ -2,26 +2,47 @@ const pool = require('../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-//Method to create New User
+
 const register = async (req, res) => {
-    //Gather New User details from request
-    const { username, email, password } = req.body;
-    
-    //Hash password and enter user info into User db
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
+  const { username, email, password } = req.body;
 
-        const result = await pool.query(
-        'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *',
-        [username, email, hashedPassword]
-        );
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        res.json(result.rows[0]);
-    //Error catch
-    } catch (err) {
+    const result = await pool.query(
+      `INSERT INTO users
+       (username, email, password)
+       VALUES ($1, $2, $3)
+       RETURNING id, username, email`,
+      [username, email, hashedPassword]
+    );
+
+    const user = result.rows[0];
+
+    // CREATE JWT
+    const token = jwt.sign(
+      {
+        id: user.id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    // RETURN TOKEN + USER
+    res.json({
+      token,
+      user,
+    });
+
+  } catch (err) {
     console.error(err);
-    res.status(500).send('Error registering user');
-    }
+
+    res.status(500).send(
+      "Error registering user"
+    );
+  }
 };
 
 //Method to authenticate user login

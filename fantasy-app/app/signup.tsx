@@ -17,6 +17,8 @@ import {
   TYPOGRAPHY,
 } from "../constants/theme";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 function Signup() {
   const [username, onChangeUsername] = useState("");
 
@@ -35,9 +37,16 @@ function Signup() {
     }
 
     try {
-      await register(username, email, password);
+      const response = await register(
+        username,
+        email,
+        password
+      );
 
-      console.log("User registered!");
+      await AsyncStorage.setItem(
+        "token",
+        response.token
+      );
 
       router.replace("/profile");
 
