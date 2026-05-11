@@ -13,6 +13,7 @@ import {
 import Navbar from "./navbar";
 import { COLORS, TYPOGRAPHY } from "@/constants/theme";
 import { Image } from "expo-image";
+import { URL } from "@/services/api";
 
 interface Team {
   id: string;
@@ -111,8 +112,8 @@ function Home() {
     setLoading(true); // Spinner ON
     try {
       const [teamsRes, gamesRes] = await Promise.all([
-        fetch("http://localhost:5001/api/mlb/teams"),
-        fetch("http://localhost:5001/api/mlb/scoreboard"),
+        fetch(`${URL}/api/mlb/teams`),
+        fetch(`${URL}/api/mlb/scoreboard`),
       ]);
 
       const teamsData: TeamResponse = await teamsRes.json();
@@ -129,7 +130,7 @@ function Home() {
 
   const silentGamesUpdate = async () => {
     try {
-      const response = await fetch("http://localhost:5001/api/mlb/scoreboard");
+      const response = await fetch(`${URL}/api/mlb/scoreboard`);
       const data: GameResponse = await response.json();
       // React only updates the Game Cards, the rest of the page stays still
       setGames(data.events);
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: COLORS.card,
-    paddingTop: 20,
+    // paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomWidth: 2,

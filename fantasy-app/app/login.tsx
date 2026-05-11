@@ -14,10 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { useRouter } from "expo-router";
 
-import {
-  COLORS,
-  TYPOGRAPHY,
-} from "../constants/theme";
+import { COLORS, TYPOGRAPHY } from "../constants/theme";
 
 function Login() {
   const [identifier, onChangeIdentifier] = useState("");
@@ -34,8 +31,7 @@ function Login() {
 
       console.log("TOKEN:", token);
 
-      router.replace("/profile");
-
+      router.replace("/home");
     } catch (err) {
       console.error("Login error:", err);
     }
@@ -47,13 +43,9 @@ function Login() {
         {/* HEADER STRIPE */}
         <View style={styles.stripe} />
 
-        <Text style={styles.title}>
-          LOGIN
-        </Text>
+        <Text style={styles.title}>LOGIN</Text>
 
-        <Text style={styles.subtitle}>
-          Fantasy Baseball Manager
-        </Text>
+        <Text style={styles.subtitle}>Fantasy Baseball Manager</Text>
 
         <TextInput
           placeholder="Username or Email"
@@ -72,21 +64,12 @@ function Login() {
           style={styles.input}
         />
 
-        <TouchableOpacity
-          onPress={handleLogin}
-          style={styles.primaryButton}
-        >
-          <Text style={styles.buttonText}>
-            LOGIN
-          </Text>
+        <TouchableOpacity onPress={handleLogin} style={styles.primaryButton}>
+          <Text style={styles.buttonText}>LOGIN</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => router.push("/signup")}
-        >
-          <Text style={styles.linkText}>
-            Need an account? Sign up
-          </Text>
+        <TouchableOpacity onPress={() => router.push("/signup")}>
+          <Text style={styles.linkText}>Need an account? Sign up</Text>
         </TouchableOpacity>
       </View>
     </View>

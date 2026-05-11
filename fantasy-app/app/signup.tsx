@@ -12,10 +12,7 @@ import {
 
 import { register } from "../services/auth";
 
-import {
-  COLORS,
-  TYPOGRAPHY,
-} from "../constants/theme";
+import { COLORS, TYPOGRAPHY } from "../constants/theme";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -26,8 +23,7 @@ function Signup() {
 
   const [password, onChangePassword] = useState("");
 
-  const [reenterPassword, onChangeReenterPassword] =
-    useState("");
+  const [reenterPassword, onChangeReenterPassword] = useState("");
 
   const handleSignup = async () => {
     if (password !== reenterPassword) {
@@ -37,19 +33,11 @@ function Signup() {
     }
 
     try {
-      const response = await register(
-        username,
-        email,
-        password
-      );
+      const response = await register(username, email, password);
 
-      await AsyncStorage.setItem(
-        "token",
-        response.token
-      );
+      await AsyncStorage.setItem("token", response.token);
 
-      router.replace("/profile");
-
+      router.replace("/home");
     } catch (err) {
       console.error("Signup error:", err);
     }
@@ -61,13 +49,9 @@ function Signup() {
         {/* HEADER STRIPE */}
         <View style={styles.stripe} />
 
-        <Text style={styles.title}>
-          SIGN UP
-        </Text>
+        <Text style={styles.title}>SIGN UP</Text>
 
-        <Text style={styles.subtitle}>
-          Build your fantasy dynasty
-        </Text>
+        <Text style={styles.subtitle}>Build your fantasy dynasty</Text>
 
         <TextInput
           placeholder="Username"
@@ -103,21 +87,12 @@ function Signup() {
           style={styles.input}
         />
 
-        <TouchableOpacity
-          onPress={handleSignup}
-          style={styles.redButton}
-        >
-          <Text style={styles.buttonText}>
-            CREATE ACCOUNT
-          </Text>
+        <TouchableOpacity onPress={handleSignup} style={styles.redButton}>
+          <Text style={styles.buttonText}>CREATE ACCOUNT</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => router.push("/login")}
-        >
-          <Text style={styles.linkText}>
-            Already have an account? Login
-          </Text>
+        <TouchableOpacity onPress={() => router.push("/login")}>
+          <Text style={styles.linkText}>Already have an account? Login</Text>
         </TouchableOpacity>
       </View>
     </View>

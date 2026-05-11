@@ -28,9 +28,27 @@ interface Team {
   id: string;
   displayName: string;
   logos: Logo[];
+  record: Record;
+  nextEvent: NextEvent[];
+  standingSummary: string;
 }
 interface Logo {
   href: string;
+}
+interface Record {
+  items: Items[];
+}
+
+interface Items {
+  description: string;
+  type: string;
+  summary: string;
+}
+interface NextEvent {
+  id: string;
+  date: string;
+  name: string;
+  shortName: string;
 }
 interface RosterResponse {
   athletes: Athletes[];
@@ -121,6 +139,45 @@ function Team() {
           <Text style={styles.teamTitle}>
             {team?.displayName.toUpperCase()}
           </Text>
+          {team?.standingSummary && (
+            <Text style={styles.standingSummaryText}>
+              {team.standingSummary.toUpperCase()}
+            </Text>
+          )}
+          {team?.record?.items && (
+            <View style={styles.recordBadge}>
+              <Text style={styles.recordText}>
+                {team.record.items[0]?.summary}
+              </Text>
+              <Text style={styles.recordLabel}>OVERALL RECORD</Text>
+            </View>
+          )}
+          {team?.nextEvent?.[0] && (
+            <TouchableOpacity
+              style={[
+                styles.statBox,
+                { borderLeftWidth: 1, borderLeftColor: COLORS.border },
+              ]}
+              onPress={() =>
+                router.push({
+                  pathname: "/game",
+                  params: { gameID: team.nextEvent[0].id },
+                })
+              }
+            >
+              <Text style={[styles.nextEventText, { color: COLORS.lightBlue }]}>
+                {team.nextEvent[0].shortName} ➔
+              </Text>
+              <Text style={styles.statLabel}>
+                {new Date(team.nextEvent[0].date).toLocaleDateString([], {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* 2. ROSTER SECTIONS */}
@@ -224,6 +281,36 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textTransform: "uppercase",
   },
+  recordBadge: {
+    backgroundColor: COLORS.secondaryBlue,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 4,
+    marginTop: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  recordText: {
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 20,
+    letterSpacing: 1,
+  },
+  recordLabel: {
+    color: COLORS.lightBlue,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 10,
+    textTransform: "uppercase",
+    marginTop: 2,
+  },
+  standingSummaryText: {
+    color: COLORS.faint, // Use your muted color
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 14,
+    marginTop: 4,
+    letterSpacing: 1,
+  },
   playerCard: {
     backgroundColor: COLORS.cardAlt,
     flexDirection: "row",
@@ -267,6 +354,39 @@ const styles = StyleSheet.create({
   logo: {
     width: 447 / 2,
     height: 325 / 2,
+  },
+  statsRow: {
+    flexDirection: "row",
+    backgroundColor: COLORS.cardAlt,
+    marginTop: 15,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: "hidden",
+  },
+  statBox: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    alignItems: "center",
+    minWidth: 120,
+  },
+  statLabel: {
+    color: COLORS.lightBlue,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 10,
+    textTransform: "uppercase",
+    marginTop: 2,
+  },
+  // recordText: {
+  //   color: COLORS.text,
+  //   fontFamily: TYPOGRAPHY.title,
+  //   fontSize: 18,
+  // },
+  nextEventText: {
+    color: COLORS.lightBlue,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 14,
+    textTransform: "uppercase",
   },
 });
 

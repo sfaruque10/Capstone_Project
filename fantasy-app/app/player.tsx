@@ -97,12 +97,12 @@ function Player() {
     <View style={styles.page}>
       {/* 1. HERO HEADER WITH BIO INFO */}
       <View style={styles.header}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
           <Text style={styles.backText}>◀ BACK</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <View style={styles.bioContainer}>
           <Image
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: COLORS.card,
-    paddingTop: 60,
+    // paddingTop: 60,
     paddingBottom: 25,
     paddingHorizontal: 20,
     borderBottomWidth: 4,

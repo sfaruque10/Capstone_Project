@@ -5,7 +5,7 @@ import {
   Oswald_600SemiBold,
   Oswald_700Bold,
 } from "@expo-google-fonts/oswald";
-
+import { COLORS, TYPOGRAPHY } from "../constants/theme";
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Oswald_400Regular,
@@ -13,10 +13,10 @@ export default function RootLayout() {
     Oswald_700Bold,
   });
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  if (!fontsLoaded) return null;
+
   return (
+<<<<<<< Updated upstream
     <Stack screenOptions={{ headerShown: false }}>
       <Tabs screenOptions={{ headerShown: false }}>
         <Tabs.Screen name="home" />
@@ -37,6 +37,46 @@ export default function RootLayout() {
         <Tabs.Screen name="team" options={{ href: null }} />
         <Tabs.Screen name="player" options={{ href: null }} />
       </Tabs>
+=======
+    <Stack
+      screenOptions={{
+        // 1. Show the header so we get the arrow
+        headerShown: true,
+        // 2. Midnight Theme colors
+        headerStyle: {
+          backgroundColor: COLORS.card,
+        },
+        headerShadowVisible: false, // Removes the thin line under the header
+        headerTintColor: COLORS.lightBlue, // 🔥 Colors the Back Arrow
+
+        // 3. Remove the Title text
+        headerTitle: "",
+        headerBackVisible: false, // Removes "Back" text on iOS
+      }}
+    >
+      <Stack.Screen
+        name="home"
+        options={{ headerLeft: () => null, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="leagues"
+        options={{ headerLeft: () => null, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="profile"
+        options={{ headerLeft: () => null, gestureEnabled: false }}
+      />
+      {/* 
+         The internal Tabs component usually doesn't need a back arrow.
+         We hide the Stack header for the Tabs themselves.
+      */}
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+      {/* 
+         If your player or team screens are pushed onto the stack, 
+         they will now show the blue arrow and NO title automatically.
+      */}
+>>>>>>> Stashed changes
     </Stack>
   );
 }

@@ -19,6 +19,7 @@ export default function JoinLeague() {
   const [name, setName] = useState("");
   const [availableLeagues, setAvailableLeagues] = useState<any[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<any>(null);
+  const [isFocused, setIsFocused] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   useEffect(() => {
@@ -54,17 +55,29 @@ export default function JoinLeague() {
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <TextInput
-          placeholder="Team Name"
-          placeholderTextColor={COLORS.faint}
-          value={name}
-          onChangeText={setName}
-          style={styles.inputText}
-        />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View
+          style={[
+            styles.inputContainer,
+            isFocused && {
+              backgroundColor: "#1E293B",
+              borderColor: COLORS.primaryBlue,
+              borderWidth: 2,
+            },
+          ]}
+        >
+          <TextInput
+            placeholder="Enter Team Name"
+            placeholderTextColor={COLORS.faint}
+            value={name}
+            onChangeText={setName}
+            style={styles.inputText}
+          />
+        </View>
         <FlatList
           data={availableLeagues}
           keyExtractor={(item) => item.id.toString()}
+          scrollEnabled={false}
           renderItem={({ item }) => {
             const isSelected = selectedLeague?.id === item.id;
             return (

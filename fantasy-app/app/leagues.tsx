@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: COLORS.border,
     padding: 20,
-    paddingTop: 20,
+    // paddingTop: 20,
   },
   topBarText: {
     color: COLORS.text,

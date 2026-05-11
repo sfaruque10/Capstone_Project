@@ -51,6 +51,11 @@ interface Type {
 }
 interface Competitors {
   score: string;
+  linescores: Linescores[];
+}
+
+interface Linescores {
+  displayValue: string;
 }
 interface Teams {
   team: Team;
@@ -139,12 +144,12 @@ function Game() {
     <View style={styles.page}>
       {/* 1. SCOREBOARD HERO */}
       <View style={styles.header}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
           <Text style={styles.backText}>◀ BACK</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <View style={styles.scoreboard}>
           <View style={styles.teamContainer}>
@@ -178,12 +183,16 @@ function Game() {
               {game?.header?.competitions[0].competitors[1].score || "0"} -{" "}
               {game?.header?.competitions[0].competitors[0].score || "0"}
             </Text>
-            <View style={styles.situationRow}>
-              <Text style={styles.outsText}>{game?.situation?.outs} OUTS</Text>
-              <Text style={styles.countText}>
-                {game?.situation?.balls}-{game?.situation?.strikes}
-              </Text>
-            </View>
+            {!game?.header?.competitions[0].status.type.completed && (
+              <View style={styles.situationRow}>
+                <Text style={styles.outsText}>
+                  {game?.situation?.outs} OUTS
+                </Text>
+                <Text style={styles.countText}>
+                  {game?.situation?.balls}-{game?.situation?.strikes}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.teamContainer}>
@@ -198,6 +207,82 @@ function Game() {
               {homeTeam?.team.abbreviation || "HME"}
             </Text>
           </View>
+        </View>
+        {/* Home Team Row */}
+        <View style={styles.lineScoreRow}>
+          <View style={styles.lineScoreLabelCell} />
+          {(game?.header.competitions[0].competitors[1].linescores || []).map(
+            (_, i) => (
+              <Text key={i} style={styles.lineScoreCell}>
+                {i + 1}
+              </Text>
+            ),
+          )}
+          {/* 🔥 Match width with the boldScore below */}
+          <Text
+            style={[
+              styles.lineScoreCell,
+              styles.finalScoreColumn,
+              { fontFamily: TYPOGRAPHY.title },
+            ]}
+          >
+            R
+          </Text>
+        </View>
+
+        {/* 2. AWAY TEAM ROW */}
+        <View style={styles.lineScoreRow}>
+          <Text style={styles.lineScoreLabelCell}>
+            {awayTeam?.team.abbreviation}
+          </Text>
+          {game?.header.competitions[0].competitors[1].linescores.map(
+            (ls, i) => (
+              <Text key={i} style={styles.lineScoreCell}>
+                {ls.displayValue}
+              </Text>
+            ),
+          )}
+          {/* 🔥 Use the finalScoreColumn style */}
+          <Text
+            style={[
+              styles.lineScoreCell,
+              styles.finalScoreColumn,
+              styles.boldScore,
+            ]}
+          >
+            {game?.header.competitions[0].competitors[1].score}
+          </Text>
+        </View>
+
+        {/* 3. HOME TEAM ROW */}
+        <View style={styles.lineScoreRow}>
+          <Text style={styles.lineScoreLabelCell}>
+            {homeTeam?.team.abbreviation}
+          </Text>
+          {(game?.header.competitions[0].competitors[1].linescores || []).map(
+            (_, i) => {
+              const homeInning =
+                game?.header.competitions[0].competitors[0].linescores[i];
+              const isCompleted =
+                game?.header.competitions[0].status.type.completed;
+              const showX = isCompleted && !homeInning;
+              return (
+                <Text key={i} style={styles.lineScoreCell}>
+                  {homeInning ? homeInning.displayValue : showX ? "X" : "-"}
+                </Text>
+              );
+            },
+          )}
+          {/* 🔥 Use the finalScoreColumn style */}
+          <Text
+            style={[
+              styles.lineScoreCell,
+              styles.finalScoreColumn,
+              styles.boldScore,
+            ]}
+          >
+            {game?.header.competitions[0].competitors[0].score}
+          </Text>
         </View>
 
         <Text style={styles.venueText}>
@@ -312,7 +397,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
   header: {
     backgroundColor: COLORS.card,
-    paddingTop: 60,
+    // paddingTop: 60,
     paddingBottom: 20,
     borderBottomWidth: 4,
     borderBottomColor: COLORS.primaryRed,
@@ -420,6 +505,50 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontFamily: TYPOGRAPHY.subtitle,
     fontSize: 14,
+  },
+  lineScoreContainer: {
+    backgroundColor: COLORS.cardAlt,
+    padding: 12,
+    marginTop: 20,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginHorizontal: 20,
+  },
+  lineScoreRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 2,
+  },
+  lineScoreLabelCell: {
+    width: 50,
+    color: COLORS.faint,
+    fontFamily: TYPOGRAPHY.subtitle,
+    fontSize: 14,
+  },
+  lineScoreHeaderCell: {
+    flex: 1,
+    textAlign: "center",
+    color: COLORS.muted,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 10,
+  },
+  lineScoreCell: {
+    width: 30,
+    textAlign: "center",
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 14,
+  },
+  finalScoreColumn: {
+    width: 45, // Set this slightly wider than inning cells
+    marginLeft: 10, // Add a little gap before the final score
+  },
+  boldScore: {
+    color: COLORS.lightBlue,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 16,
+    textAlign: "center",
   },
   statLine: {
     flexDirection: "row",

@@ -21,7 +21,7 @@ function Navbar() {
           <TouchableOpacity
             key={tab.name}
             style={styles.tab}
-            onPress={() => router.push(tab.path as any)}
+            onPress={() => router.replace(tab.path as any)}
           >
             <Ionicons
               name={tab.icon as any}
@@ -46,7 +46,6 @@ function Navbar() {
 export default Navbar;
 const styles = StyleSheet.create({
   navBar: {
-    // 🔥 Force to bottom of the screen
     position: "absolute",
     bottom: 0,
     left: 0,

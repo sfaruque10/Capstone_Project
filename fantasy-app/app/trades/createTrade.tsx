@@ -1,12 +1,6 @@
-import {
-  useLocalSearchParams,
-  useRouter,
-} from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
-import React, {
-  useEffect,
-  useState,
-} from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   ScrollView,
@@ -18,83 +12,50 @@ import {
   StyleSheet,
 } from "react-native";
 
-import {
-  getLeagueTeams,
-} from "../../services/leagues";
+import { getLeagueTeams } from "../../services/leagues";
 
-import {
-  getTeamPlayers,
-} from "../../services/teams";
+import { getTeamPlayers } from "../../services/teams";
 
-import {
-  createTrade,
-} from "../../services/trades";
+import { createTrade } from "../../services/trades";
 
-import {
-  COLORS,
-  TYPOGRAPHY,
-} from "../../constants/theme";
+import { COLORS, TYPOGRAPHY } from "../../constants/theme";
+import Navbar from "../navbar";
 
 import Navbar from "../navbar";
 
 export default function CreateTradePage() {
-  const { teamId, leagueId } =
-    useLocalSearchParams();
+  const { teamId, leagueId } = useLocalSearchParams();
 
   const router = useRouter();
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [teams, setTeams] = useState<any[]>(
-    []
-  );
+  const [teams, setTeams] = useState<any[]>([]);
 
-  const [myPlayers, setMyPlayers] =
-    useState<any[]>([]);
+  const [myPlayers, setMyPlayers] = useState<any[]>([]);
 
-  const [theirPlayers, setTheirPlayers] =
-    useState<any[]>([]);
+  const [theirPlayers, setTheirPlayers] = useState<any[]>([]);
 
-  const [targetTeam, setTargetTeam] =
-    useState<number | null>(null);
+  const [targetTeam, setTargetTeam] = useState<number | null>(null);
 
-  const [offeredPlayers, setOfferedPlayers] =
-    useState<number[]>([]);
+  const [offeredPlayers, setOfferedPlayers] = useState<number[]>([]);
 
-  const [
-    requestedPlayers,
-    setRequestedPlayers,
-  ] = useState<number[]>([]);
+  const [requestedPlayers, setRequestedPlayers] = useState<number[]>([]);
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const leagueTeams =
-          await getLeagueTeams(
-            Number(leagueId)
-          );
+        const leagueTeams = await getLeagueTeams(Number(leagueId));
 
-        const roster =
-          await getTeamPlayers(
-            Number(teamId)
-          );
+        const roster = await getTeamPlayers(Number(teamId));
 
-        setTeams(
-          leagueTeams.filter(
-            (team: any) =>
-              team.id !== Number(teamId)
-          )
-        );
+        setTeams(leagueTeams.filter((team: any) => team.id !== Number(teamId)));
 
         setMyPlayers(roster);
-
       } catch (err) {
         console.error(err);
-
       } finally {
         setLoading(false);
       }
@@ -103,19 +64,15 @@ export default function CreateTradePage() {
     loadInitialData();
   }, []);
 
-  const chooseOpponent = async (
-    id: number
-  ) => {
+  const chooseOpponent = async (id: number) => {
     try {
       setTargetTeam(id);
 
       setRequestedPlayers([]);
 
-      const roster =
-        await getTeamPlayers(id);
+      const roster = await getTeamPlayers(id);
 
       setTheirPlayers(roster);
-
     } catch (err) {
       console.error(err);
     }
@@ -124,17 +81,10 @@ export default function CreateTradePage() {
   const togglePlayer = (
     playerId: number,
     selected: number[],
-    setter: React.Dispatch<
-      React.SetStateAction<number[]>
-    >
+    setter: React.Dispatch<React.SetStateAction<number[]>>,
   ) => {
     if (selected.includes(playerId)) {
-      setter(
-        selected.filter(
-          (id) => id !== playerId
-        )
-      );
-
+      setter(selected.filter((id) => id !== playerId));
     } else {
       setter([...selected, playerId]);
     }
@@ -147,16 +97,12 @@ export default function CreateTradePage() {
     }
 
     if (offeredPlayers.length === 0) {
-      Alert.alert(
-        "Select players to offer"
-      );
+      Alert.alert("Select players to offer");
       return;
     }
 
     if (requestedPlayers.length === 0) {
-      Alert.alert(
-        "Select players to request"
-      );
+      Alert.alert("Select players to request");
       return;
     }
 
@@ -168,20 +114,16 @@ export default function CreateTradePage() {
         Number(teamId),
         targetTeam,
         offeredPlayers,
-        requestedPlayers
+        requestedPlayers,
       );
 
       Alert.alert("Trade created");
 
       router.back();
-
     } catch (err) {
       console.error(err);
 
-      Alert.alert(
-        "Failed to create trade"
-      );
-
+      Alert.alert("Failed to create trade");
     } finally {
       setSubmitting(false);
     }
@@ -190,36 +132,19 @@ export default function CreateTradePage() {
   const renderSelectablePlayer = (
     player: any,
     selected: number[],
-    setter: React.Dispatch<
-      React.SetStateAction<number[]>
-    >
+    setter: React.Dispatch<React.SetStateAction<number[]>>,
   ) => {
-    const active =
-      selected.includes(player.player_id);
+    const active = selected.includes(player.player_id);
 
     return (
       <TouchableOpacity
         key={player.player_id}
-        onPress={() =>
-          togglePlayer(
-            player.player_id,
-            selected,
-            setter
-          )
-        }
-        style={[
-          styles.selectableCard,
-          active &&
-            styles.selectableCardActive,
-        ]}
+        onPress={() => togglePlayer(player.player_id, selected, setter)}
+        style={[styles.selectableCard, active && styles.selectableCardActive]}
       >
-        <Text style={styles.playerName}>
-          {player.name}
-        </Text>
+        <Text style={styles.playerName}>{player.name}</Text>
 
-        <Text style={styles.playerInfo}>
-          {player.position}
-        </Text>
+        <Text style={styles.playerInfo}>{player.position}</Text>
       </TouchableOpacity>
     );
   };
@@ -227,24 +152,30 @@ export default function CreateTradePage() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator
-          size="large"
-          color={COLORS.primaryRed}
-        />
+        <ActivityIndicator size="large" color={COLORS.primaryRed} />
       </View>
     );
   }
 
   return (
+<<<<<<< Updated upstream
     <View style={styles.page}>
+=======
+    <View style={{ flex: 1, backgroundColor: COLORS.background }}>
+>>>>>>> Stashed changes
       <ScrollView
         style={styles.page}
         contentContainerStyle={{
           padding: 20,
+<<<<<<< Updated upstream
+=======
+          paddingBottom: 100,
+>>>>>>> Stashed changes
         }}
       >
         <View style={styles.section}>
           <View style={styles.stripe} />
+<<<<<<< Updated upstream
 
           <Text style={styles.title}>
             CREATE TRADE
@@ -253,10 +184,17 @@ export default function CreateTradePage() {
           <Text style={styles.subtitle}>
             SELECT OPPONENT
           </Text>
+=======
+
+          <Text style={styles.title}>CREATE TRADE</Text>
+
+          <Text style={styles.subtitle}>SELECT OPPONENT</Text>
+>>>>>>> Stashed changes
 
           {teams.map((team) => (
             <TouchableOpacity
               key={team.id}
+<<<<<<< Updated upstream
               onPress={() =>
                 chooseOpponent(team.id)
               }
@@ -269,11 +207,21 @@ export default function CreateTradePage() {
               <Text style={styles.playerName}>
                 {team.name}
               </Text>
+=======
+              onPress={() => chooseOpponent(team.id)}
+              style={[
+                styles.selectableCard,
+                targetTeam === team.id && styles.selectableCardActive,
+              ]}
+            >
+              <Text style={styles.playerName}>{team.name}</Text>
+>>>>>>> Stashed changes
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={styles.section}>
+<<<<<<< Updated upstream
           <Text style={styles.subtitle}>
             PLAYERS YOU OFFER
           </Text>
@@ -284,21 +232,36 @@ export default function CreateTradePage() {
               offeredPlayers,
               setOfferedPlayers
             )
+=======
+          <Text style={styles.subtitle}>PLAYERS YOU OFFER</Text>
+
+          {myPlayers.map((player) =>
+            renderSelectablePlayer(player, offeredPlayers, setOfferedPlayers),
+>>>>>>> Stashed changes
           )}
         </View>
 
         {targetTeam && (
           <View style={styles.section}>
+<<<<<<< Updated upstream
             <Text style={styles.subtitle}>
               PLAYERS YOU REQUEST
             </Text>
+=======
+            <Text style={styles.subtitle}>PLAYERS YOU REQUEST</Text>
+>>>>>>> Stashed changes
 
             {theirPlayers.map((player) =>
               renderSelectablePlayer(
                 player,
                 requestedPlayers,
+<<<<<<< Updated upstream
                 setRequestedPlayers
               )
+=======
+                setRequestedPlayers,
+              ),
+>>>>>>> Stashed changes
             )}
           </View>
         )}
@@ -309,9 +272,13 @@ export default function CreateTradePage() {
           style={styles.submitButton}
         >
           <Text style={styles.buttonText}>
+<<<<<<< Updated upstream
             {submitting
               ? "SUBMITTING..."
               : "SUBMIT TRADE"}
+=======
+            {submitting ? "SUBMITTING..." : "SUBMIT TRADE"}
+>>>>>>> Stashed changes
           </Text>
         </TouchableOpacity>
       </ScrollView>

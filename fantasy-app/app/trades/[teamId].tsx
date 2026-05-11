@@ -1,14 +1,6 @@
-import {
-  useLocalSearchParams,
-  useFocusEffect,
-  useRouter,
-} from "expo-router";
+import { useLocalSearchParams, useFocusEffect, useRouter } from "expo-router";
 
-import React, {
-  useState,
-  useCallback,
-  useEffect
-} from "react";
+import React, { useState, useCallback, useEffect } from "react";
 
 import {
   ScrollView,
@@ -26,10 +18,8 @@ import {
   Trade,
 } from "../../services/trades";
 
-import {
-  COLORS,
-  TYPOGRAPHY,
-} from "../../constants/theme";
+import { COLORS, TYPOGRAPHY } from "../../constants/theme";
+import Navbar from "../navbar";
 
 import Navbar from "../navbar";
 
@@ -43,15 +33,11 @@ export default function TradesPage() {
 
   const loadTrades = async () => {
     try {
-      const data = await getTradesForTeam(
-        Number(teamId)
-      );
+      const data = await getTradesForTeam(Number(teamId));
 
       setTrades(data);
-
     } catch (err) {
       console.error(err);
-
     } finally {
       setLoading(false);
     }
@@ -60,7 +46,7 @@ export default function TradesPage() {
   useFocusEffect(
     useCallback(() => {
       loadTrades();
-    }, [teamId])
+    }, [teamId]),
   );
 
   useEffect(() => {
@@ -69,7 +55,6 @@ export default function TradesPage() {
     }, 5000);
 
     return () => clearInterval(interval);
-
   }, [teamId]);
 
   const handleAccept = async (id: number) => {
@@ -77,14 +62,10 @@ export default function TradesPage() {
       await acceptTrade(id);
 
       loadTrades();
-
     } catch (err: any) {
       console.error(err);
 
-      alert(
-        err?.response?.data?.error ||
-        "Failed to accept trade"
-      );
+      alert(err?.response?.data?.error || "Failed to accept trade");
     }
   };
 
@@ -93,40 +74,42 @@ export default function TradesPage() {
       await rejectTrade(id);
 
       loadTrades();
-
     } catch (err: any) {
       console.error(err);
 
-      alert(
-        err?.response?.data?.error ||
-        "Failed to reject trade"
-      );
+      alert(err?.response?.data?.error || "Failed to reject trade");
     }
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator
-          size="large"
-          color={COLORS.primaryRed}
-        />
+        <ActivityIndicator size="large" color={COLORS.primaryRed} />
       </View>
     );
   }
 
   return (
+<<<<<<< Updated upstream
     <View style={styles.page}>
+=======
+    <View style={{ flex: 1, backgroundColor: COLORS.background }}>
+>>>>>>> Stashed changes
       <ScrollView
         style={styles.page}
         contentContainerStyle={{
           padding: 20,
+<<<<<<< Updated upstream
+=======
+          paddingBottom: 100,
+>>>>>>> Stashed changes
         }}
       >
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.stripe} />
 
+<<<<<<< Updated upstream
           <Text style={styles.title}>
             Trades
           </Text>
@@ -150,6 +133,26 @@ export default function TradesPage() {
           </TouchableOpacity>
         </View>
 
+=======
+          <Text style={styles.title}>Trades</Text>
+
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: "/trades/createTrade",
+                params: {
+                  teamId,
+                  leagueId,
+                },
+              })
+            }
+            style={styles.primaryButton}
+          >
+            <Text style={styles.buttonText}>CREATE TRADE</Text>
+          </TouchableOpacity>
+        </View>
+
+>>>>>>> Stashed changes
         {/* TRADE LIST */}
         {trades.map((trade) => (
           <View
@@ -160,10 +163,16 @@ export default function TradesPage() {
                 borderColor:
                   trade.status === "accepted"
                     ? COLORS.primaryBlue
+<<<<<<< Updated upstream
                     : trade.status ===
                       "rejected"
                     ? COLORS.primaryRed
                     : COLORS.border,
+=======
+                    : trade.status === "rejected"
+                      ? COLORS.primaryRed
+                      : COLORS.border,
+>>>>>>> Stashed changes
               },
             ]}
           >
@@ -172,6 +181,7 @@ export default function TradesPage() {
                 styles.tradeStripe,
                 {
                   backgroundColor:
+<<<<<<< Updated upstream
                     trade.status ===
                     "accepted"
                       ? COLORS.primaryBlue
@@ -179,10 +189,18 @@ export default function TradesPage() {
                         "rejected"
                       ? COLORS.primaryRed
                       : "#64748B",
+=======
+                    trade.status === "accepted"
+                      ? COLORS.primaryBlue
+                      : trade.status === "rejected"
+                        ? COLORS.primaryRed
+                        : "#64748B",
+>>>>>>> Stashed changes
                 },
               ]}
             />
 
+<<<<<<< Updated upstream
             <Text style={styles.tradeTitle}>
               TRADE #{trade.id}
             </Text>
@@ -223,11 +241,42 @@ export default function TradesPage() {
               {trade.to_team_name}
             </Text>
 
+=======
+            <Text style={styles.tradeTitle}>TRADE #{trade.id}</Text>
+
+            <View style={{ marginBottom: 14 }}>
+              <Text style={styles.tradeSectionTitle}>OFFERING</Text>
+
+              {trade.offered_players.map((player: any) => (
+                <Text key={player.id} style={styles.playerText}>
+                  • {player.name} ({player.position})
+                </Text>
+              ))}
+            </View>
+
+            <View style={{ marginBottom: 16 }}>
+              <Text style={styles.tradeSectionTitle}>REQUESTING</Text>
+
+              {trade.requested_players.map((player: any) => (
+                <Text key={player.id} style={styles.playerText}>
+                  • {player.name} ({player.position})
+                </Text>
+              ))}
+            </View>
+
+            <Text style={styles.tradeText}>
+              {trade.from_team_name}
+              {" ↔ "}
+              {trade.to_team_name}
+            </Text>
+
+>>>>>>> Stashed changes
             <View
               style={[
                 styles.statusBadge,
                 {
                   backgroundColor:
+<<<<<<< Updated upstream
                     trade.status ===
                     "accepted"
                       ? COLORS.primaryBlue
@@ -235,6 +284,13 @@ export default function TradesPage() {
                         "rejected"
                       ? COLORS.primaryRed
                       : "#475569",
+=======
+                    trade.status === "accepted"
+                      ? COLORS.primaryBlue
+                      : trade.status === "rejected"
+                        ? COLORS.primaryRed
+                        : "#475569",
+>>>>>>> Stashed changes
                 },
               ]}
             >
@@ -244,6 +300,7 @@ export default function TradesPage() {
             </View>
 
             {trade.status === "pending" &&
+<<<<<<< Updated upstream
               trade.to_team_id ===
                 Number(teamId) && (
                 <View style={styles.buttonRow}>
@@ -273,6 +330,22 @@ export default function TradesPage() {
                     >
                       REJECT
                     </Text>
+=======
+              trade.to_team_id === Number(teamId) && (
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    onPress={() => handleAccept(trade.id)}
+                    style={styles.primaryButtonSmall}
+                  >
+                    <Text style={styles.buttonText}>ACCEPT</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => handleReject(trade.id)}
+                    style={styles.redButtonSmall}
+                  >
+                    <Text style={styles.buttonText}>REJECT</Text>
+>>>>>>> Stashed changes
                   </TouchableOpacity>
                 </View>
               )}

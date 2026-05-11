@@ -17,13 +17,14 @@ import API from "../../services/api";
 import { getLeagueTeams } from "@/services/leagues";
 import { COLORS, TYPOGRAPHY } from "../../constants/theme";
 import Navbar from "../navbar";
+import { Stack } from "expo-router";
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: COLORS.background },
   container: { flex: 1 },
   topBar: {
     backgroundColor: COLORS.card,
     padding: 20,
-    paddingTop: 60,
+    // paddingTop: 60,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
@@ -136,6 +137,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 4,
   },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background, // #060B16
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+
+  loadingText: {
+    color: COLORS.lightBlue, // #60A5FA
+    fontFamily: TYPOGRAPHY.subtitle, // Oswald_600SemiBold
+    fontSize: 14,
+    marginTop: 20,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
+
+  errorText: {
+    color: COLORS.primaryRed, // #C8102E
+    fontFamily: TYPOGRAPHY.title, // Oswald_700Bold
+    fontSize: 18,
+    textTransform: "uppercase",
+  },
 });
 interface TeamPlayer {
   id: number;
@@ -177,8 +201,13 @@ export default function TeamPage() {
 
   useFocusEffect(
     useCallback(() => {
+      setTeam(null);
+      setPlayers([]);
+      setLoading(true);
       const fetchTeamData = async () => {
+        if (!id || !leagueId) return;
         try {
+          console.log(`Switching to Team ID: ${id}`);
           const [
             teamData,
             rosterRes,
@@ -203,16 +232,17 @@ export default function TeamPage() {
           setAllLeagueTeams(
             leagueTeams.sort((a: any, b: any) => a.draft_order - b.draft_order),
           );
-
           setLoading(false);
-
-          onRefresh();
         } catch (err) {
           console.error("Error fetching team data:", err);
           setLoading(false);
         }
       };
       fetchTeamData();
+      return () => {
+        setTeam(null);
+        setPlayers([]);
+      };
     }, [id, leagueId]),
   );
 
@@ -797,6 +827,13 @@ export default function TeamPage() {
           </TouchableOpacity>
         );
       }
+      if (swappingPlayer && swappingPlayer.slot === label) {
+        return (
+          <View key={`${label}-${index}`} style={styles.emptySlot}>
+            <Text style={styles.emptyText}>{label.toUpperCase()} EMPTY</Text>
+          </View>
+        );
+      }
       if (isRosterFull) {
         return (
           <View
@@ -852,8 +889,22 @@ export default function TeamPage() {
     .filter((p) => p.slot !== "Bench")
     .reduce((sum, player) => sum + (Number(player.points) || 0), 0);
 
-  if (loading) return <ActivityIndicator />;
-  if (!team) return <Text>Team not found</Text>;
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primaryBlue} />
+      </View>
+    );
+  }
+
+  // ONLY check for !team once loading is false
+  if (!team) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={{ color: COLORS.text }}>Team Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.page}>
@@ -977,10 +1028,8 @@ export default function TeamPage() {
                   <TouchableOpacity
                     onPress={() =>
                       router.push({
-                        pathname: "/players/[id]",
-                        params: {
-                          id: player.player_id,
-                        },
+                        pathname: "/player",
+                        params: { playerID: player.player_id }, // Just the ID is enough now!
                       })
                     }
                   >
@@ -1053,7 +1102,42 @@ export default function TeamPage() {
               </View>
             );
           })}
-
+        {isViewingOwnTeam &&
+          (league?.draft_complete || (league?.draft && isUserTurn)) && (
+            <View style={{ marginTop: 5 }}>
+              {players.length >= 28 ? (
+                /* State: Roster is Full */
+                <View style={[styles.emptySlot, { opacity: 0.5 }]}>
+                  <Text style={styles.emptyText}>
+                    BENCH FULL (ROSTER 28/28)
+                  </Text>
+                </View>
+              ) : (
+                /* State: Room for Free Agent */
+                <TouchableOpacity
+                  style={styles.emptySlot}
+                  onPress={() => handleAddPlayerNav("Any")}
+                >
+                  <Text
+                    style={[
+                      styles.emptyText,
+                      {
+                        color: league?.draft_complete
+                          ? "#28a745"
+                          : COLORS.lightBlue,
+                      },
+                    ]}
+                  >
+                    +{" "}
+                    {league?.draft_complete
+                      ? "ADD FREE AGENT TO BENCH"
+                      : "DRAFT TO BENCH"}{" "}
+                    ({players.length}/28)
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         <TouchableOpacity
           style={styles.tradeButton}
           onPress={() =>

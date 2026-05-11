@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   topBar: {
     backgroundColor: COLORS.card,
     padding: 20,
-    paddingTop: 60,
+    // paddingTop: 60,
     borderBottomWidth: 2,
     borderBottomColor: COLORS.border,
   },
