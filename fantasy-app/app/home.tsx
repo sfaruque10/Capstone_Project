@@ -130,7 +130,7 @@ function Home() {
 
   const silentGamesUpdate = async () => {
     try {
-      const response = await fetch(`${URL}/api/mlb/scoreboard`);
+      const response = await fetch(`${URL}api/mlb/scoreboard`);
       const data: GameResponse = await response.json();
       // React only updates the Game Cards, the rest of the page stays still
       setGames(data.events);
