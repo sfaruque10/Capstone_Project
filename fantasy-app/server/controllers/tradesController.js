@@ -315,6 +315,14 @@ const acceptTrade = async (req, res) => {
       'SELECT * FROM trade_players WHERE trade_id = $1',
       [id]
     );
+    
+    if (playersRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+
+      return res.status(400).json({
+        error: 'Trade contains no players'
+      });
+    }
 
     const fromTeamRoster = await client.query(
       `SELECT COUNT(*) FROM team_players
@@ -361,13 +369,16 @@ const acceptTrade = async (req, res) => {
     for (const row of playersRes.rows) {
       const ownershipCheck = await client.query(
         `
-        SELECT *
-        FROM team_players
+        SELECT tp.*
+        FROM team_players tp
+        JOIN teams t
+          ON tp.team_id = t.id
         WHERE
-          team_id = $1
-          AND player_id = $2
+          tp.team_id = $1
+          AND tp.player_id = $2
+          AND t.league_id = $3
         `,
-        [row.team_id, row.player_id]
+        [row.team_id, row.player_id, trade.league_id]
       );
 
       if (ownershipCheck.rows.length === 0) {
