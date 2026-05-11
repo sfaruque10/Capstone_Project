@@ -75,44 +75,10 @@ cron.schedule("0 3 * * *", async () => {
   }
 });
 
-// let mlbRosterCache = { data: null, lastFetched: 0 };
+const PORT = process.env.PORT || 5001;
 
-// app.get("/api/mlb/full-roster", async (req, res) => {
-//   const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
-//   const now = Date.now();
-
-//   // 1. Check if we have a fresh cache
-//   if (
-//     mlbRosterCache.data &&
-//     now - mlbRosterCache.lastFetched < CACHE_DURATION
-//   ) {
-//     return res.json(mlbRosterCache.data);
-//   }
-
-//   try {
-//     const teamIds = Array.from({ length: 30 }, (_, i) => i + 1);
-//     // Fetch all 30 rosters in parallel
-//     const responses = await Promise.all(
-//       teamIds.map((id) =>
-//         axios.get(
-//           `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/${id}/roster`,
-//         ),
-//       ),
-//     );
-
-//     const allAthletes = responses.map((r) => r.data.athletes);
-
-//     // 2. Update cache
-//     mlbRosterCache = { data: allAthletes, lastFetched: now };
-
-//     res.json(allAthletes);
-//   } catch (error) {
-//     res.status(500).json({ error: "Failed to fetch rosters" });
-//   }
-// });
-const PORT = 5001;
-
-//Run server
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(
+    `Server running on port ${PORT}`,
+  );
 });
