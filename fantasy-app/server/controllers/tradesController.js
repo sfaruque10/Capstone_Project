@@ -1,5 +1,7 @@
 const pool = require('../config/db');
 
+const MAX_TEAM_SIZE = 28;
+
 const createTrade = async (req, res) => {
   const {
     league_id,
@@ -314,6 +316,48 @@ const acceptTrade = async (req, res) => {
       [id]
     );
 
+    const fromTeamRoster = await client.query(
+      `SELECT COUNT(*) FROM team_players
+      WHERE team_id = $1`,
+      [trade.from_team_id]
+    );
+
+    const toTeamRoster = await client.query(
+      `SELECT COUNT(*) FROM team_players
+      WHERE team_id = $1`,
+      [trade.to_team_id]
+    );
+
+    const offeredCount = playersRes.rows.filter(
+      (p) => p.team_id === trade.from_team_id
+    ).length;
+
+    const requestedCount = playersRes.rows.filter(
+      (p) => p.team_id === trade.to_team_id
+    ).length;
+
+    const fromTeamNewSize =
+      Number(fromTeamRoster.rows[0].count)
+      - offeredCount
+      + requestedCount;
+
+    const toTeamNewSize =
+      Number(toTeamRoster.rows[0].count)
+      - requestedCount
+      + offeredCount;
+
+    if (
+      fromTeamNewSize > MAX_TEAM_SIZE ||
+      toTeamNewSize > MAX_TEAM_SIZE
+    ) {
+      await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        error:
+          "Trade exceeds maximum roster size",
+      });
+    }
+
     for (const row of playersRes.rows) {
       const newTeam =
         row.team_id === trade.from_team_id
@@ -322,8 +366,11 @@ const acceptTrade = async (req, res) => {
 
       await client.query(
         `UPDATE team_players
-         SET team_id = $1
-         WHERE team_id = $2 AND player_id = $3`,
+        SET
+          team_id = $1,
+          slot = 'Bench'
+        WHERE team_id = $2
+          AND player_id = $3`,
         [newTeam, row.team_id, row.player_id]
       );
     }
