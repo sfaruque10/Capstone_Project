@@ -71,15 +71,35 @@ export default function TradesPage() {
   }, [teamId]);
 
   const handleAccept = async (id: number) => {
-    await acceptTrade(id);
+    try {
+      await acceptTrade(id);
 
-    loadTrades();
+      loadTrades();
+
+    } catch (err: any) {
+      console.error(err);
+
+      alert(
+        err?.response?.data?.error ||
+        "Failed to accept trade"
+      );
+    }
   };
 
   const handleReject = async (id: number) => {
-    await rejectTrade(id);
+    try {
+      await rejectTrade(id);
 
-    loadTrades();
+      loadTrades();
+
+    } catch (err: any) {
+      console.error(err);
+
+      alert(
+        err?.response?.data?.error ||
+        "Failed to reject trade"
+      );
+    }
   };
 
   if (loading) {
