@@ -455,37 +455,101 @@ export default function TeamPage() {
   //     alert("An error occurred while swapping players.");
   //   }
   // };
-  const performSwap = async (playerA: TeamPlayer, playerB: TeamPlayer) => {
-    const aCanGoToB = isValidForSlot(playerA.position, playerB.slot);
-    const bCanGoToA = isValidForSlot(playerB.position, playerA.slot);
-    if (!aCanGoToB || !bCanGoToA) {
-      alert(
-        `Invalid Swap: ${playerA.position} and ${playerB.position} are not compatible for these slots.`,
-      );
-      return;
-    }
-    try {
-      // Move Player A to Player B's slot
-      await API.patch(`/teams/${id}/players`, {
-        team_id: Number(id),
-        player_id: playerA.player_id,
-        slot: playerB.slot,
-      });
+  // const performSwap = async (playerA: TeamPlayer, playerB: TeamPlayer) => {
+  //   const aCanGoToB = isValidForSlot(playerA.position, playerB.slot);
+  //   const bCanGoToA = isValidForSlot(playerB.position, playerA.slot);
+  //   if (!aCanGoToB || !bCanGoToA) {
+  //     alert(
+  //       `Invalid Swap: ${playerA.position} and ${playerB.position} are not compatible for these slots.`,
+  //     );
+  //     return;
+  //   }
+  //   try {
+  //     // Move Player A to Player B's slot
+  //     await API.patch(`/teams/${id}/players`, {
+  //       team_id: Number(id),
+  //       player_id: playerA.player_id,
+  //       slot: playerB.slot,
+  //     });
 
-      // Move Player B to Player A's slot
-      await API.patch(`/teams/${id}/players`, {
-        team_id: Number(id),
-        player_id: playerB.player_id,
-        slot: playerA.slot,
-      });
+  //     // Move Player B to Player A's slot
+  //     await API.patch(`/teams/${id}/players`, {
+  //       team_id: Number(id),
+  //       player_id: playerB.player_id,
+  //       slot: playerA.slot,
+  //     });
 
-      setSwappingPlayer(null); // Reset
-      const rosterRes = await API.get(`/teams/${id}/players`);
-      setPlayers(rosterRes.data);
-      alert(`Swapped ${playerA.name} and ${playerB.name}`);
-    } catch (err) {
-      console.error("Swap failed", err);
+  //     setSwappingPlayer(null); // Reset
+  //     const rosterRes = await API.get(`/teams/${id}/players`);
+  //     setPlayers(rosterRes.data);
+  //     alert(`Swapped ${playerA.name} and ${playerB.name}`);
+  //   } catch (err) {
+  //     console.error("Swap failed", err);
+  //   }
+  // };
+  const performSwap = async (
+    playerA: TeamPlayer,
+    playerB?: TeamPlayer | null,
+    targetSlot?: string,
+  ) => {
+    if (playerB) {
+      // --- SCENARIO 1: TRADING PLACES ---
+      const aCanGoToB = isValidForSlot(playerA.position, playerB.slot);
+      const bCanGoToA = isValidForSlot(playerB.position, playerA.slot);
+
+      if (!aCanGoToB || !bCanGoToA) {
+        alert(`Invalid Swap: Positions not compatible for these slots.`);
+        return;
+      }
+
+      try {
+        // Step 1: Move Player A to B's slot
+        await API.patch(`/teams/${id}/players`, {
+          team_id: Number(id),
+          player_id: playerA.player_id,
+          slot: playerB.slot,
+        });
+
+        // Step 2: Move Player B to A's slot
+        await API.patch(`/teams/${id}/players`, {
+          team_id: Number(id),
+          player_id: playerB.player_id,
+          slot: playerA.slot,
+        });
+
+        alert(`Swapped ${playerA.name} and ${playerB.name}`);
+      } catch (err) {
+        console.error("Swap failed", err);
+      }
+    } else if (targetSlot) {
+      // --- SCENARIO 2: MOVING INTO A HOLE ---
+      const canGoToHole = isValidForSlot(playerA.position, targetSlot);
+
+      if (!canGoToHole) {
+        alert(
+          `Invalid Move: ${playerA.name} (${playerA.position}) cannot play ${targetSlot}.`,
+        );
+        return;
+      }
+
+      try {
+        // Just move Player A to the empty slot
+        await API.patch(`/teams/${id}/players`, {
+          team_id: Number(id),
+          player_id: playerA.player_id,
+          slot: targetSlot,
+        });
+
+        alert(`Moved ${playerA.name} to ${targetSlot}`);
+      } catch (err) {
+        console.error("Move failed", err);
+      }
     }
+
+    // --- REFRESH UI ---
+    setSwappingPlayer(null); // Reset selection
+    const rosterRes = await API.get(`/teams/${id}/players`);
+    setPlayers(rosterRes.data);
   };
   // // Inside TeamPage pollData function
   // const pollData = async () => {
@@ -691,6 +755,11 @@ export default function TeamPage() {
     const isFreeAgency = league?.draft_complete;
     const isMyTurnToDraft = league?.draft && isUserTurn;
     const isRosterFull = players.length >= 28;
+    const isPlayerSelected = swappingPlayer !== null;
+    const canSwapIntoThisHole =
+      swappingPlayer &&
+      isValidForSlot(swappingPlayer.position, label) &&
+      swappingPlayer.slot !== label;
     // YOUR ORIGINAL CONDITIONALS:
     if (league?.draft && isUserTurn && isViewingOwnTeam) {
       return (
@@ -712,6 +781,22 @@ export default function TeamPage() {
     }
 
     if (isViewingOwnTeam && (isMyTurnToDraft || isFreeAgency)) {
+      if (canSwapIntoThisHole) {
+        return (
+          <TouchableOpacity
+            key={`${label}-${index}`}
+            style={[
+              styles.emptySlot,
+              { borderColor: "orange", borderStyle: "solid" },
+            ]}
+            onPress={() => performSwap(swappingPlayer, null, label)} // null because target is empty
+          >
+            <Text style={[styles.emptyText, { color: "orange" }]}>
+              ➔ MOVE {swappingPlayer.name.toUpperCase()} HERE
+            </Text>
+          </TouchableOpacity>
+        );
+      }
       if (isRosterFull) {
         return (
           <View
