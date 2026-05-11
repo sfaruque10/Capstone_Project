@@ -141,19 +141,71 @@ const createTrade = async (req, res) => {
 const getTradesForTeam = async (req, res) => {
   const { teamId } = req.params;
 
-
   try {
-    const result = await pool.query(
-      `SELECT * FROM trades
-      WHERE from_team_id = $1 OR to_team_id = $1
-      ORDER BY created_at DESC`,
+    const tradesResult = await pool.query(
+      `
+      SELECT
+        t.*,
+
+        ft.name AS from_team_name,
+        tt.name AS to_team_name
+
+      FROM trades t
+
+      JOIN teams ft
+        ON t.from_team_id = ft.id
+
+      JOIN teams tt
+        ON t.to_team_id = tt.id
+
+      WHERE t.from_team_id = $1
+         OR t.to_team_id = $1
+
+      ORDER BY t.created_at DESC
+      `,
       [teamId]
     );
 
-  res.json(result.rows);
+    const trades = tradesResult.rows;
+
+    for (const trade of trades) {
+      const playersResult = await pool.query(
+        `
+        SELECT
+          tp.team_id,
+          p.id,
+          p.name,
+          p.position
+
+        FROM trade_players tp
+
+        JOIN players p
+          ON tp.player_id = p.id
+
+        WHERE tp.trade_id = $1
+        `,
+        [trade.id]
+      );
+
+      trade.offered_players =
+        playersResult.rows.filter(
+          (p) => p.team_id === trade.from_team_id
+        );
+
+      trade.requested_players =
+        playersResult.rows.filter(
+          (p) => p.team_id === trade.to_team_id
+        );
+    }
+
+    res.json(trades);
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 

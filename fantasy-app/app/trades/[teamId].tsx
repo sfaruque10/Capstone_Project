@@ -7,6 +7,7 @@ import {
 import React, {
   useState,
   useCallback,
+  useEffect
 } from "react";
 
 import {
@@ -59,6 +60,15 @@ export default function TradesPage() {
       loadTrades();
     }, [teamId])
   );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadTrades();
+    }, 5000);
+
+    return () => clearInterval(interval);
+
+  }, [teamId]);
 
   const handleAccept = async (id: number) => {
     await acceptTrade(id);
@@ -154,10 +164,40 @@ export default function TradesPage() {
             TRADE #{trade.id}
           </Text>
 
+          <View style={{ marginBottom: 14 }}>
+            <Text style={styles.tradeSectionTitle}>
+              OFFERING
+            </Text>
+
+            {trade.offered_players.map((player: any) => (
+              <Text
+                key={player.id}
+                style={styles.playerText}
+              >
+                • {player.name} ({player.position})
+              </Text>
+            ))}
+          </View>
+
+          <View style={{ marginBottom: 16 }}>
+            <Text style={styles.tradeSectionTitle}>
+              REQUESTING
+            </Text>
+
+            {trade.requested_players.map((player: any) => (
+              <Text
+                key={player.id}
+                style={styles.playerText}
+              >
+                • {player.name} ({player.position})
+              </Text>
+            ))}
+          </View>
+
           <Text style={styles.tradeText}>
-            Team {trade.from_team_id}
+            {trade.from_team_name}
             {" ↔ "}
-            Team {trade.to_team_id}
+            {trade.to_team_name}
           </Text>
 
           <View
@@ -328,5 +368,20 @@ const styles = StyleSheet.create({
     color: "white",
     fontFamily: TYPOGRAPHY.title,
     letterSpacing: 1,
+  },
+
+  tradeSectionTitle: {
+    color: COLORS.primaryRed,
+    fontFamily: TYPOGRAPHY.title,
+    fontSize: 16,
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+
+  playerText: {
+    color: COLORS.text,
+    fontFamily: TYPOGRAPHY.body,
+    fontSize: 15,
+    marginBottom: 4,
   },
 });
