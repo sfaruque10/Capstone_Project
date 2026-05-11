@@ -30,28 +30,32 @@ const LeagueDetailsScreen = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null); // Track user
   const [loading, setLoading] = useState(true);
+  const fetchData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    try {
+      const [leagueData, teamData, userData] = await Promise.all([
+        getLeagueDetails(Number(id)),
+        getLeagueTeams(Number(id)),
+        getCurrentUser(),
+      ]);
 
+      setLeagueDetails(leagueData);
+      setTeams(teamData);
+      if (userData) setCurrentUserId(userData.id);
+    } catch (err) {
+      console.error("Error fetching league data:", err);
+    } finally {
+      if (!isSilent) setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const leagueData = await getLeagueDetails(Number(id));
-        const teamData = await getLeagueTeams(Number(id));
-        const userData = await getCurrentUser();
-
-        setLeagueDetails(leagueData);
-        setTeams(teamData);
-
-        if (userData) {
-          setCurrentUserId(userData.id);
-        }
-      } catch (err) {
-        console.error("Error fetching league data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
+    const interval = setInterval(() => {
+      console.log("Background league refresh triggered...");
+      fetchData(true);
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, [id]);
 
   const handleToggleLock = async () => {

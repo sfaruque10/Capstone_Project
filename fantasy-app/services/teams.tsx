@@ -10,7 +10,7 @@ export interface Team {
 
 export const getTeamById = async (teamId: number): Promise<Team> => {
   const response = await API.get(`/teams/${teamId}`);
-  return response.data;
+  return Array.isArray(response.data) ? response.data[0] : response.data;
 };
 
 // Get players on a team

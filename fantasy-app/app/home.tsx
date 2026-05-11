@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: COLORS.card,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomWidth: 2,
