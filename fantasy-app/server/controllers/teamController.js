@@ -85,12 +85,41 @@ const getTeamPlayers = async (req, res) => {
   }
 };
 
+// const addPlayerToTeam = async (req, res) => {
+//   const { id } = req.params; // team_id
+//   const { player_id, slot, league_id } = req.body;
+
+//   try {
+//     // Prevent duplicates
+//     const exists = await pool.query(
+//       "SELECT * FROM team_players WHERE team_id = $1 AND player_id = $2",
+//       [id, player_id],
+//     );
+
+//     if (exists.rows.length > 0) {
+//       return res.status(400).json({ error: "Player already on team" });
+//     }
+
+//     const result = await pool.query(
+//       `INSERT INTO team_players (team_id, player_id, slot, league_id, points)
+//        VALUES ($1, $2, $3, $4, 0)
+//        RETURNING *`,
+//       [id, player_id, slot, league_id],
+//     );
+
+//     res.json(result.rows[0]);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
 const addPlayerToTeam = async (req, res) => {
   const { id } = req.params; // team_id
   const { player_id, slot, league_id } = req.body;
 
   try {
-    // Prevent duplicates
+    // 1. Prevent duplicates (Player already on this team)
     const exists = await pool.query(
       "SELECT * FROM team_players WHERE team_id = $1 AND player_id = $2",
       [id, player_id],
@@ -100,6 +129,22 @@ const addPlayerToTeam = async (req, res) => {
       return res.status(400).json({ error: "Player already on team" });
     }
 
+    // 🔥 2. Check Roster Limit (Max 28)
+    const countRes = await pool.query(
+      "SELECT COUNT(*) FROM team_players WHERE team_id = $1",
+      [id],
+    );
+
+    const currentCount = parseInt(countRes.rows[0].count);
+
+    if (currentCount >= 28) {
+      return res.status(400).json({
+        error:
+          "Roster Full (28/28). You must drop a player before adding a new one.",
+      });
+    }
+
+    // 3. Proceed with INSERT if limits are respected
     const result = await pool.query(
       `INSERT INTO team_players (team_id, player_id, slot, league_id, points)
        VALUES ($1, $2, $3, $4, 0)

@@ -690,7 +690,7 @@ export default function TeamPage() {
     // --- LOGIC FOR EMPTY SLOTS ---
     const isFreeAgency = league?.draft_complete;
     const isMyTurnToDraft = league?.draft && isUserTurn;
-
+    const isRosterFull = players.length >= 28;
     // YOUR ORIGINAL CONDITIONALS:
     if (league?.draft && isUserTurn && isViewingOwnTeam) {
       return (
@@ -712,6 +712,18 @@ export default function TeamPage() {
     }
 
     if (isViewingOwnTeam && (isMyTurnToDraft || isFreeAgency)) {
+      if (isRosterFull) {
+        return (
+          <View
+            key={`${label}-${index}`}
+            style={[styles.emptySlot, { opacity: 0.5 }]}
+          >
+            <Text style={[styles.emptyText, { color: COLORS.faint }]}>
+              {label.toUpperCase()} EMPTY (ROSTER FULL 28/28)
+            </Text>
+          </View>
+        );
+      }
       return (
         <TouchableOpacity
           key={`${label}-${index}`}
@@ -858,117 +870,91 @@ export default function TeamPage() {
           <View
             style={[styles.redStripe, { backgroundColor: COLORS.primaryBlue }]}
           />
-            <Text style={styles.categoryHeaderText}>BENCH</Text>
-          </View>
+          <Text style={styles.categoryHeaderText}>BENCH</Text>
+        </View>
 
-          {players
-            .filter(
-              (p) =>
-                p.slot === "Bench" ||
-                p.slot === "Any"
-            )
-            .map((player) => {
-              const isThisSelected =
-                swappingPlayer?.player_id ===
-                player.player_id;
+        {players
+          .filter((p) => p.slot === "Bench" || p.slot === "Any")
+          .map((player) => {
+            const isThisSelected =
+              swappingPlayer?.player_id === player.player_id;
 
-              const canSwapHere =
-                swappingPlayer &&
-                !isThisSelected &&
-                swappingPlayer.slot !== "Bench" &&
-                swappingPlayer.slot !== "Any" &&
-                isValidForSlot(
-                  player.position,
-                  swappingPlayer.slot
-                );
+            const canSwapHere =
+              swappingPlayer &&
+              !isThisSelected &&
+              swappingPlayer.slot !== "Bench" &&
+              swappingPlayer.slot !== "Any" &&
+              isValidForSlot(player.position, swappingPlayer.slot);
 
-              return (
-                <View
-                  key={`bench-${player.player_id}`}
-                  style={styles.playerCard}
-                >
-                  <View style={styles.playerInfo}>
-                    <TouchableOpacity
-                      onPress={() =>
-                        router.push({
-                          pathname: "/players/[id]",
-                          params: {
-                            id: player.player_id,
-                          },
-                        })
-                      }
+            return (
+              <View key={`bench-${player.player_id}`} style={styles.playerCard}>
+                <View style={styles.playerInfo}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "/players/[id]",
+                        params: {
+                          id: player.player_id,
+                        },
+                      })
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.playerName,
+                        {
+                          color: COLORS.lightBlue,
+                        },
+                      ]}
                     >
-                      <Text
+                      {player.name.toUpperCase()} ➔
+                    </Text>
+                  </TouchableOpacity>
+
+                  <Text style={styles.playerPosition}>
+                    BENCH • {player.position}
+                  </Text>
+
+                  {isViewingOwnTeam && !league?.draft && (
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity
                         style={[
-                          styles.playerName,
-                          {
-                            color: COLORS.lightBlue,
+                          styles.swapButton,
+
+                          canSwapHere && {
+                            backgroundColor: "orange",
+                          },
+
+                          isThisSelected && {
+                            backgroundColor: "red",
                           },
                         ]}
+                        onPress={() => {
+                          if (canSwapHere) {
+                            performSwap(swappingPlayer, player);
+                          } else {
+                            setSwappingPlayer(isThisSelected ? null : player);
+                          }
+                        }}
                       >
-                        {player.name.toUpperCase()} ➔
-                      </Text>
-                    </TouchableOpacity>
-
-                    <Text style={styles.playerPosition}>
-                      BENCH • {player.position}
-                    </Text>
-
-                    {isViewingOwnTeam &&
-                      !league?.draft && (
-                        <View style={styles.actionRow}>
-                          <TouchableOpacity
-                            style={[
-                              styles.swapButton,
-
-                              canSwapHere && {
-                                backgroundColor:
-                                  "orange",
-                              },
-
-                              isThisSelected && {
-                                backgroundColor:
-                                  "red",
-                              },
-                            ]}
-                            onPress={() => {
-                              if (canSwapHere) {
-                                performSwap(
-                                  swappingPlayer,
-                                  player
-                                );
-
-                              } else {
-                                setSwappingPlayer(
-                                  isThisSelected
-                                    ? null
-                                    : player
-                                );
-                              }
-                            }}
-                          >
-                            <Text
-                              style={styles.buttonText}
-                            >
-                              {isThisSelected
-                                ? "CANCEL"
-                                : canSwapHere
-                                  ? "SWAP HERE"
-                                  : "SWAP"}
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                  </View>
-
-                  <Text style={styles.playerPoints}>
-                    {Number(
-                      player.points || 0
-                    ).toFixed(1)}
-                  </Text>
+                        <Text style={styles.buttonText}>
+                          {isThisSelected
+                            ? "CANCEL"
+                            : canSwapHere
+                              ? "SWAP HERE"
+                              : "SWAP"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
-              );
-            })}
+
+                <Text style={styles.playerPoints}>
+                  {Number(player.points || 0).toFixed(1)}
+                </Text>
+              </View>
+            );
+          })}
 
         <TouchableOpacity
           style={styles.tradeButton}
