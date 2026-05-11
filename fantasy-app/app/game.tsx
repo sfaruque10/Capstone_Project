@@ -211,13 +211,13 @@ function Game() {
         {/* Home Team Row */}
         <View style={styles.lineScoreRow}>
           <View style={styles.lineScoreLabelCell} />
-          {(game?.header.competitions[0].competitors[1].linescores || []).map(
-            (_, i) => (
-              <Text key={i} style={styles.lineScoreCell}>
-                {i + 1}
-              </Text>
-            ),
-          )}
+          {(
+            game?.header?.competitions[0]?.competitors[1]?.linescores || []
+          ).map((_, i) => (
+            <Text key={i} style={styles.lineScoreCell}>
+              {i + 1}
+            </Text>
+          ))}
           {/* 🔥 Match width with the boldScore below */}
           <Text
             style={[
@@ -235,14 +235,13 @@ function Game() {
           <Text style={styles.lineScoreLabelCell}>
             {awayTeam?.team.abbreviation}
           </Text>
-          {game?.header.competitions[0].competitors[1].linescores.map(
+          {game?.header?.competitions[0]?.competitors[1]?.linescores?.map(
             (ls, i) => (
               <Text key={i} style={styles.lineScoreCell}>
                 {ls.displayValue}
               </Text>
             ),
           )}
-          {/* 🔥 Use the finalScoreColumn style */}
           <Text
             style={[
               styles.lineScoreCell,
@@ -259,20 +258,20 @@ function Game() {
           <Text style={styles.lineScoreLabelCell}>
             {homeTeam?.team.abbreviation}
           </Text>
-          {(game?.header.competitions[0].competitors[1].linescores || []).map(
-            (_, i) => {
-              const homeInning =
-                game?.header.competitions[0].competitors[0].linescores[i];
-              const isCompleted =
-                game?.header.competitions[0].status.type.completed;
-              const showX = isCompleted && !homeInning;
-              return (
-                <Text key={i} style={styles.lineScoreCell}>
-                  {homeInning ? homeInning.displayValue : showX ? "X" : "-"}
-                </Text>
-              );
-            },
-          )}
+          {(
+            game?.header?.competitions[0]?.competitors[1]?.linescores || []
+          ).map((_, i) => {
+            const homeInning =
+              game?.header?.competitions[0]?.competitors[0]?.linescores[i];
+            const isCompleted =
+              game?.header.competitions[0].status.type.completed;
+            const showX = isCompleted && !homeInning;
+            return (
+              <Text key={i} style={styles.lineScoreCell}>
+                {homeInning ? homeInning.displayValue : showX ? "X" : "-"}
+              </Text>
+            );
+          })}
           {/* 🔥 Use the finalScoreColumn style */}
           <Text
             style={[
