@@ -242,43 +242,43 @@ const startDraft = async (req, res) => {
 };
 
 // backend leagueController.js
-// const checkDraftCompletion = async (req, res) => {
-//   const { id } = req.params;
+const checkDraftCompletion = async (req, res) => {
+  const { id } = req.params;
 
-//   try {
-//     // 1. Get the number of teams currently in the league
-//     const teamCountRes = await pool.query(
-//       "SELECT COUNT(*) FROM teams WHERE league_id = $1",
-//       [id],
-//     );
-//     const numTeams = parseInt(teamCountRes.rows[0].count);
+  try {
+    // 1. Get the number of teams currently in the league
+    const teamCountRes = await pool.query(
+      "SELECT COUNT(*) FROM teams WHERE league_id = $1",
+      [id],
+    );
+    const numTeams = parseInt(teamCountRes.rows[0].count);
 
-//     // 2. Set the total spots per team (Must match your front-end renderSlot count)
-//     const ROSTER_SIZE = 28;
-//     const totalRequiredPicks = numTeams * ROSTER_SIZE;
+    // 2. Set the total spots per team (Must match your front-end renderSlot count)
+    const ROSTER_SIZE = 28;
+    const totalRequiredPicks = numTeams * ROSTER_SIZE;
 
-//     // 3. Count how many players have been drafted across the ENTIRE league
-//     const draftedRes = await pool.query(
-//       "SELECT COUNT(*) FROM team_players WHERE league_id = $1",
-//       [id],
-//     );
-//     const actualPicks = parseInt(draftedRes.rows[0].count);
+    // 3. Count how many players have been drafted across the ENTIRE league
+    const draftedRes = await pool.query(
+      "SELECT COUNT(*) FROM team_players WHERE league_id = $1",
+      [id],
+    );
+    const actualPicks = parseInt(draftedRes.rows[0].count);
 
-//     // 4. If the draft is full, flip the draft bit to false
-//     if (actualPicks >= totalRequiredPicks) {
-//       await pool.query(
-//         "UPDATE leagues SET draft = false, draft_complete = true WHERE id = $1",
-//         [id],
-//       );
-//       return res.json({ finished: true });
-//     }
+    // 4. If the draft is full, flip the draft bit to false
+    if (actualPicks >= totalRequiredPicks) {
+      await pool.query(
+        "UPDATE leagues SET draft = false, draft_complete = true WHERE id = $1",
+        [id],
+      );
+      return res.json({ finished: true });
+    }
 
-//     res.json({ finished: false });
-//   } catch (err) {
-//     console.error("Completion check error:", err.message);
-//     res.status(500).json({ error: err.message });
-//   }
-// };
+    res.json({ finished: false });
+  } catch (err) {
+    console.error("Completion check error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
 
 // const performInternalSync = async (teamId) => {
 //   console.log(`Checking points for Team ID: ${teamId}`);
@@ -470,7 +470,6 @@ const performInternalSync = async (teamId) => {
     console.error("Sync Error:", err.message);
   }
 };
-
 const syncAllLeagues = async () => {
   try {
     const teams = await pool.query("SELECT id FROM teams");
