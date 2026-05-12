@@ -382,7 +382,9 @@ const performInternalSync = async (teamId) => {
 
     // 3. Process every game found
     for (const eventId of eventIds) {
-      const summary = await axios.get(`https://espn.com{eventId}`);
+      const summary = await axios.get(
+        `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event=${eventId}`,
+      );
 
       const teamsArray = summary.data.boxscore?.players;
       if (!teamsArray) continue;
