@@ -312,15 +312,118 @@ const PITCHING_SCORING = {
 //     res.status(500).json({ error: err.message });
 //   }
 // };
+// const syncTeamPoints = async (req, res) => {
+//   const { id } = req.params;
+//   console.log(`\n[1] --- Sync Triggered for Team ID: ${id} ---`);
+
+//   try {
+//     // Clear today's display points to start fresh
+//     await pool.query("UPDATE team_players SET points = 0 WHERE team_id = $1", [
+//       id,
+//     ]);
+
+//     const scoreboard = await axios.get(
+//       "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard",
+//     );
+//     const eventIds = scoreboard.data.events.map((e) => e.id);
+
+//     if (eventIds.length === 0) return res.json({ message: "No games found." });
+
+//     for (const eventId of eventIds) {
+//       const summary = await axios.get(
+//         `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event=${eventId}`,
+//       );
+//       const teamsArray = summary.data.boxscore?.players;
+//       if (!teamsArray) continue;
+
+//       for (const teamData of teamsArray) {
+//         // --- FIX 1: Use a Map to accumulate points across different stat sections ---
+//         const gamePointsMap = {};
+
+//         for (const statSection of teamData.statistics) {
+//           const rules =
+//             statSection.type === "batting" ? BATTING_SCORING : PITCHING_SCORING;
+//           const { keys, athletes } = statSection;
+
+//           athletes.forEach((athleteData) => {
+//             const espnId = athleteData.athlete.id;
+//             if (!gamePointsMap[espnId]) gamePointsMap[espnId] = 0;
+
+//             keys.forEach((key, index) => {
+//               const rawValue = athleteData.stats[index];
+//               const statValue = parseFloat(rawValue) || 0;
+
+//               if (key === "fullInnings.partInnings") {
+//                 const [innings, outs] = String(rawValue).split(".").map(Number);
+//                 gamePointsMap[espnId] += (innings * 3 + (outs || 0)) * 1;
+//               } else if (rules[key]) {
+//                 gamePointsMap[espnId] += statValue * rules[key];
+//               }
+//             });
+//           });
+//         }
+
+//         // --- FIX 2: Save the TOTAL for the game only once per player ---
+//         for (const [espnId, totalPoints] of Object.entries(gamePointsMap)) {
+//           if (totalPoints === 0) continue;
+
+//           const playerInfo = await pool.query(
+//             `SELECT p.id as internal_id, tp.slot
+//              FROM players p
+//              JOIN team_players tp ON p.id = tp.player_id
+//              WHERE p.id = $1 AND tp.team_id = $2`,
+//             [espnId, id],
+//           );
+
+//           if (playerInfo.rows.length > 0) {
+//             const { internal_id, slot } = playerInfo.rows[0];
+
+//             await pool.query(
+//               "UPDATE team_players SET points = $1 WHERE team_id = $2 AND player_id = $3",
+//               [totalPoints, id, internal_id],
+//             );
+
+//             await pool.query(
+//               `INSERT INTO daily_scores (team_id, player_id, points, slot, day)
+//                VALUES ($1, $2, $3, $4, CURRENT_DATE)
+//                ON CONFLICT (team_id, player_id, day)
+//                DO UPDATE SET points = EXCLUDED.points, slot = EXCLUDED.slot`,
+//               [id, internal_id, totalPoints, slot],
+//             );
+//           }
+//         }
+//       }
+//     }
+
+//     // Final Sync: Recalculate season total from history
+//     await pool.query(
+//       `UPDATE teams SET total_season_points = (
+//          SELECT COALESCE(SUM(points), 0) FROM daily_scores
+//          WHERE team_id = $1 AND slot != 'Bench'
+//        ) WHERE id = $1`,
+//       [id],
+//     );
+
+//     res.json({ message: "Sync complete" });
+//   } catch (err) {
+//     console.error("Sync Error:", err.message);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
 const syncTeamPoints = async (req, res) => {
   const { id } = req.params;
-  console.log(`\n[1] --- Sync Triggered for Team ID: ${id} ---`);
+  console.log(`\n--- Sync Triggered for Team ID: ${id} ---`);
 
   try {
-    // Clear today's display points to start fresh
+    // 1. CLEAN SLATE: Reset display points and clear today's entries for this team
+    // This forces the 99 to disappear before we recalculate
     await pool.query("UPDATE team_players SET points = 0 WHERE team_id = $1", [
       id,
     ]);
+    await pool.query(
+      "DELETE FROM daily_scores WHERE team_id = $1 AND day = CURRENT_DATE",
+      [id],
+    );
 
     const scoreboard = await axios.get(
       "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard",
@@ -337,12 +440,15 @@ const syncTeamPoints = async (req, res) => {
       if (!teamsArray) continue;
 
       for (const teamData of teamsArray) {
-        // --- FIX 1: Use a Map to accumulate points across different stat sections ---
         const gamePointsMap = {};
 
         for (const statSection of teamData.statistics) {
-          const rules =
-            statSection.type === "batting" ? BATTING_SCORING : PITCHING_SCORING;
+          const type = statSection.type;
+
+          // --- CRITICAL FIX: Only process specific sections to prevent double-counting ---
+          if (type !== "batting" && type !== "pitching") continue;
+
+          const rules = type === "batting" ? BATTING_SCORING : PITCHING_SCORING;
           const { keys, athletes } = statSection;
 
           athletes.forEach((athleteData) => {
@@ -363,13 +469,12 @@ const syncTeamPoints = async (req, res) => {
           });
         }
 
-        // --- FIX 2: Save the TOTAL for the game only once per player ---
+        // Save totals
         for (const [espnId, totalPoints] of Object.entries(gamePointsMap)) {
           if (totalPoints === 0) continue;
 
           const playerInfo = await pool.query(
-            `SELECT p.id as internal_id, tp.slot 
-             FROM players p 
+            `SELECT p.id as internal_id, tp.slot FROM players p 
              JOIN team_players tp ON p.id = tp.player_id 
              WHERE p.id = $1 AND tp.team_id = $2`,
             [espnId, id],
@@ -377,17 +482,14 @@ const syncTeamPoints = async (req, res) => {
 
           if (playerInfo.rows.length > 0) {
             const { internal_id, slot } = playerInfo.rows[0];
-
             await pool.query(
               "UPDATE team_players SET points = $1 WHERE team_id = $2 AND player_id = $3",
               [totalPoints, id, internal_id],
             );
-
             await pool.query(
               `INSERT INTO daily_scores (team_id, player_id, points, slot, day)
                VALUES ($1, $2, $3, $4, CURRENT_DATE)
-               ON CONFLICT (team_id, player_id, day) 
-               DO UPDATE SET points = EXCLUDED.points, slot = EXCLUDED.slot`,
+               ON CONFLICT (team_id, player_id, day) DO UPDATE SET points = EXCLUDED.points`,
               [id, internal_id, totalPoints, slot],
             );
           }
@@ -395,7 +497,7 @@ const syncTeamPoints = async (req, res) => {
       }
     }
 
-    // Final Sync: Recalculate season total from history
+    // Recalculate season total
     await pool.query(
       `UPDATE teams SET total_season_points = (
          SELECT COALESCE(SUM(points), 0) FROM daily_scores 
