@@ -436,6 +436,12 @@ const syncTeamPoints = async (req, res) => {
       const summary = await axios.get(
         `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event=${eventId}`,
       );
+      const gameStatus =
+        summary.data.header?.competitions[0]?.status?.type?.name;
+      if (gameStatus === "STATUS_SCHEDULED") {
+        console.log(`Skipping Game ID ${eventId} - Game has not started yet.`);
+        continue;
+      }
       const teamsArray = summary.data.boxscore?.players;
       if (!teamsArray) continue;
 
