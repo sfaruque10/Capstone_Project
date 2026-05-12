@@ -242,124 +242,235 @@ const startDraft = async (req, res) => {
 };
 
 // backend leagueController.js
-const checkDraftCompletion = async (req, res) => {
-  const { id } = req.params;
+// const checkDraftCompletion = async (req, res) => {
+//   const { id } = req.params;
+
+//   try {
+//     // 1. Get the number of teams currently in the league
+//     const teamCountRes = await pool.query(
+//       "SELECT COUNT(*) FROM teams WHERE league_id = $1",
+//       [id],
+//     );
+//     const numTeams = parseInt(teamCountRes.rows[0].count);
+
+//     // 2. Set the total spots per team (Must match your front-end renderSlot count)
+//     const ROSTER_SIZE = 28;
+//     const totalRequiredPicks = numTeams * ROSTER_SIZE;
+
+//     // 3. Count how many players have been drafted across the ENTIRE league
+//     const draftedRes = await pool.query(
+//       "SELECT COUNT(*) FROM team_players WHERE league_id = $1",
+//       [id],
+//     );
+//     const actualPicks = parseInt(draftedRes.rows[0].count);
+
+//     // 4. If the draft is full, flip the draft bit to false
+//     if (actualPicks >= totalRequiredPicks) {
+//       await pool.query(
+//         "UPDATE leagues SET draft = false, draft_complete = true WHERE id = $1",
+//         [id],
+//       );
+//       return res.json({ finished: true });
+//     }
+
+//     res.json({ finished: false });
+//   } catch (err) {
+//     console.error("Completion check error:", err.message);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
+// const performInternalSync = async (teamId) => {
+//   console.log(`Checking points for Team ID: ${teamId}`);
+
+//   // 1. Reset today's points for this team
+//   await pool.query("UPDATE team_players SET points = 0 WHERE team_id = $1", [
+//     teamId,
+//   ]);
+
+//   const scoreboard = await axios.get(
+//     "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard",
+//   );
+//   const eventIds = scoreboard.data.events.map((e) => e.id);
+
+//   if (eventIds.length === 0) return;
+
+//   for (const eventId of eventIds) {
+//     const summary = await axios.get(
+//       `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event=${eventId}`,
+//     );
+//     const teamsArray = summary.data.boxscore?.players;
+//     if (!teamsArray) continue;
+
+//     for (const teamData of teamsArray) {
+//       for (const statSection of teamData.statistics) {
+//         const rules =
+//           statSection.type === "batting" ? BATTING_SCORING : PITCHING_SCORING;
+//         const { keys, athletes } = statSection;
+
+//         await Promise.all(
+//           athletes.map(async (athleteData) => {
+//             let totalPoints = 0;
+//             const espnId = athleteData.athlete.id;
+
+//             keys.forEach((key, index) => {
+//               const val = athleteData.stats[index];
+//               if (key === "fullInnings.partInnings") {
+//                 const [inn, outs] = String(val).split(".").map(Number);
+//                 totalPoints += inn * 3 + (outs || 0);
+//               } else if (rules[key]) {
+//                 totalPoints += (parseFloat(val) || 0) * rules[key];
+//               }
+//             });
+
+//             if (totalPoints !== 0) {
+//               const playerInfo = await pool.query(
+//                 `SELECT p.id as internal_id, tp.slot
+//                FROM players p
+//                JOIN team_players tp ON p.id = tp.player_id
+//                WHERE p.id = $1 AND tp.team_id = $2`,
+//                 [espnId, teamId],
+//               );
+
+//               if (playerInfo.rows.length > 0) {
+//                 const { internal_id, slot } = playerInfo.rows[0];
+//                 await pool.query(
+//                   "UPDATE team_players SET points = $1 WHERE team_id = $2 AND player_id = $3",
+//                   [totalPoints, teamId, internal_id],
+//                 );
+
+//                 if (slot && slot !== "Bench") {
+//                   await pool.query(
+//                     "UPDATE teams SET total_season_points = total_season_points + $1 WHERE id = $2",
+//                     [totalPoints, teamId],
+//                   );
+//                   await pool.query(
+//                     `INSERT INTO daily_scores (team_id, player_id, points, slot)
+//                    VALUES ($1, $2, $3, $4)
+//                    ON CONFLICT (team_id, player_id, day)
+//                    DO UPDATE SET points = EXCLUDED.points`,
+//                     [teamId, internal_id, totalPoints, slot],
+//                   );
+//                 }
+//               }
+//             }
+//           }),
+//         );
+//       }
+//     }
+//   }
+// };
+const performInternalSync = async (teamId) => {
+  console.log(`\n--- Internal Sync for Team ID: ${teamId} ---`);
 
   try {
-    // 1. Get the number of teams currently in the league
-    const teamCountRes = await pool.query(
-      "SELECT COUNT(*) FROM teams WHERE league_id = $1",
-      [id],
+    // 1. Reset current game points for this team
+    await pool.query("UPDATE team_players SET points = 0 WHERE team_id = $1", [
+      teamId,
+    ]);
+
+    // 2. Fetch all games on the scoreboard
+    const scoreboard = await axios.get(
+      "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard",
     );
-    const numTeams = parseInt(teamCountRes.rows[0].count);
+    const eventIds = scoreboard.data.events.map((e) => e.id);
 
-    // 2. Set the total spots per team (Must match your front-end renderSlot count)
-    const ROSTER_SIZE = 28;
-    const totalRequiredPicks = numTeams * ROSTER_SIZE;
-
-    // 3. Count how many players have been drafted across the ENTIRE league
-    const draftedRes = await pool.query(
-      "SELECT COUNT(*) FROM team_players WHERE league_id = $1",
-      [id],
-    );
-    const actualPicks = parseInt(draftedRes.rows[0].count);
-
-    // 4. If the draft is full, flip the draft bit to false
-    if (actualPicks >= totalRequiredPicks) {
-      await pool.query(
-        "UPDATE leagues SET draft = false, draft_complete = true WHERE id = $1",
-        [id],
-      );
-      return res.json({ finished: true });
+    if (eventIds.length === 0) {
+      console.log("No games found for today.");
+      return;
     }
 
-    res.json({ finished: false });
-  } catch (err) {
-    console.error("Completion check error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-};
+    // 3. Process every game found
+    for (const eventId of eventIds) {
+      const summary = await axios.get(`https://espn.com{eventId}`);
 
-const performInternalSync = async (teamId) => {
-  console.log(`Checking points for Team ID: ${teamId}`);
+      const teamsArray = summary.data.boxscore?.players;
+      if (!teamsArray) continue;
 
-  // 1. Reset today's points for this team
-  await pool.query("UPDATE team_players SET points = 0 WHERE team_id = $1", [
-    teamId,
-  ]);
+      for (const teamData of teamsArray) {
+        // Use a map to sum stats if a player appears in multiple sections (Batting/Pitching)
+        const athleteGamePoints = {};
 
-  const scoreboard = await axios.get(
-    "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard",
-  );
-  const eventIds = scoreboard.data.events.map((e) => e.id);
+        for (const statSection of teamData.statistics) {
+          const rules =
+            statSection.type === "batting" ? BATTING_SCORING : PITCHING_SCORING;
+          const { keys, athletes } = statSection;
 
-  if (eventIds.length === 0) return;
-
-  for (const eventId of eventIds) {
-    const summary = await axios.get(
-      `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event=${eventId}`,
-    );
-    const teamsArray = summary.data.boxscore?.players;
-    if (!teamsArray) continue;
-
-    for (const teamData of teamsArray) {
-      for (const statSection of teamData.statistics) {
-        const rules =
-          statSection.type === "batting" ? BATTING_SCORING : PITCHING_SCORING;
-        const { keys, athletes } = statSection;
-
-        await Promise.all(
-          athletes.map(async (athleteData) => {
-            let totalPoints = 0;
+          athletes.forEach((athleteData) => {
             const espnId = athleteData.athlete.id;
+            if (!athleteGamePoints[espnId]) athleteGamePoints[espnId] = 0;
 
             keys.forEach((key, index) => {
               const val = athleteData.stats[index];
               if (key === "fullInnings.partInnings") {
                 const [inn, outs] = String(val).split(".").map(Number);
-                totalPoints += inn * 3 + (outs || 0);
+                athleteGamePoints[espnId] += (inn * 3 + (outs || 0)) * 1;
               } else if (rules[key]) {
-                totalPoints += (parseFloat(val) || 0) * rules[key];
+                athleteGamePoints[espnId] +=
+                  (parseFloat(val) || 0) * rules[key];
               }
             });
+          });
+        }
 
-            if (totalPoints !== 0) {
-              const playerInfo = await pool.query(
-                `SELECT p.id as internal_id, tp.slot 
-               FROM players p 
-               JOIN team_players tp ON p.id = tp.player_id 
-               WHERE p.id = $1 AND tp.team_id = $2`,
-                [espnId, teamId],
+        // 4. Update the DB once per player for this game
+        const athleteIds = Object.keys(athleteGamePoints);
+        await Promise.all(
+          athleteIds.map(async (espnId) => {
+            const totalPoints = athleteGamePoints[espnId];
+            if (totalPoints === 0) return;
+
+            const playerInfo = await pool.query(
+              `SELECT p.id as internal_id, tp.slot 
+             FROM players p 
+             JOIN team_players tp ON p.id = tp.player_id 
+             WHERE p.id = $1 AND tp.team_id = $2`,
+              [espnId, teamId],
+            );
+
+            if (playerInfo.rows.length > 0) {
+              const { internal_id, slot } = playerInfo.rows[0];
+
+              // Update current points for the active game
+              await pool.query(
+                "UPDATE team_players SET points = $1 WHERE team_id = $2 AND player_id = $3",
+                [totalPoints, teamId, internal_id],
               );
 
-              if (playerInfo.rows.length > 0) {
-                const { internal_id, slot } = playerInfo.rows[0];
-                await pool.query(
-                  "UPDATE team_players SET points = $1 WHERE team_id = $2 AND player_id = $3",
-                  [totalPoints, teamId, internal_id],
-                );
-
-                if (slot && slot !== "Bench") {
-                  await pool.query(
-                    "UPDATE teams SET total_season_points = total_season_points + $1 WHERE id = $2",
-                    [totalPoints, teamId],
-                  );
-                  await pool.query(
-                    `INSERT INTO daily_scores (team_id, player_id, points, slot)
-                   VALUES ($1, $2, $3, $4)
-                   ON CONFLICT (team_id, player_id, day) 
-                   DO UPDATE SET points = EXCLUDED.points`,
-                    [teamId, internal_id, totalPoints, slot],
-                  );
-                }
-              }
+              // Record history (Upsert based on team_id, player_id, and current day)
+              await pool.query(
+                `INSERT INTO daily_scores (team_id, player_id, points, slot, day)
+               VALUES ($1, $2, $3, $4, CURRENT_DATE)
+               ON CONFLICT (team_id, player_id, day) 
+               DO UPDATE SET points = EXCLUDED.points, slot = EXCLUDED.slot`,
+                [teamId, internal_id, totalPoints, slot],
+              );
             }
           }),
         );
       }
     }
+
+    // 5. CRITICAL FIX: Recalculate Season Total from the history table (Source of Truth)
+    // This replaces the broken "total_season_points + $1" logic
+    await pool.query(
+      `UPDATE teams 
+       SET total_season_points = (
+         SELECT COALESCE(SUM(points), 0) 
+         FROM daily_scores 
+         WHERE team_id = $1 
+         AND slot != 'Bench'
+       )
+       WHERE id = $1`,
+      [teamId],
+    );
+
+    console.log(`--- Sync Finished for Team ${teamId} ---`);
+  } catch (err) {
+    console.error("Sync Error:", err.message);
   }
 };
+
 const syncAllLeagues = async () => {
   try {
     const teams = await pool.query("SELECT id FROM teams");
