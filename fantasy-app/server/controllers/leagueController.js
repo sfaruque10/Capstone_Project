@@ -420,7 +420,7 @@ const performInternalSync = async (teamId) => {
         await Promise.all(
           athleteIds.map(async (espnId) => {
             const totalPoints = athleteGamePoints[espnId];
-            if (totalPoints === 0) continue;
+            if (totalPoints === 0) return;
 
             const playerInfo = await pool.query(
               `SELECT p.id as internal_id, tp.slot 
