@@ -1,5 +1,10 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
 # dependencies
 node_modules/
 
