@@ -1,50 +1,158 @@
-# Welcome to your Expo app 👋
+]# Fantasy Baseball Platform
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A full-stack fantasy baseball application built with React Native and Node.js. Users can create accounts, form leagues, draft real MLB players, manage rosters, propose trades, and track live player stats — all backed by real-time MLB data from the ESPN API.
 
-## Get started
+## Live Demo
 
-1. Install dependencies
+> **Frontend:** https://capstone-project-nj9b.vercel.app/
+> **Backend:** https://capstone-project-33jg.onrender.com/ 
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## Features
 
-   ```bash
-   npx expo start
-   ```
+- **Authentication** — Secure account creation and login using JWT and bcrypt password hashing
+- **League Management** — Create or join leagues with custom settings
+- **Snake Draft** — Live drafting interface with state managed on the frontend
+- **Roster Management** — Add/drop players from the waiver wire, set lineups, and manage positions
+- **Trades** — Propose, review, and accept/reject trades with other teams in your league
+- **Live Player Stats** — Daily stat sync powered by the ESPN MLB API via a scheduled cron job (runs nightly at 3 AM)
+- **Live Scoreboard** — Real-time MLB game scores pulled from the ESPN API
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Tech Stack
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+**Frontend**
+- React Native + Expo (file-based routing via Expo Router)
+- TypeScript
+- Supabase JS client (for auth session management)
+- Axios (HTTP requests to the backend)
+- React Navigation (bottom tabs)
 
-## Get a fresh project
+**Backend**
+- Node.js + Express 5
+- PostgreSQL (via the `pg` driver)
+- Supabase (database hosting)
+- JWT (`jsonwebtoken`) + bcrypt for authentication
+- `node-cron` for scheduled daily stat syncs
+- Axios (ESPN API calls)
 
-When you're ready, run:
+**Deployment**
+- Frontend: Vercel
+- Backend: Render
 
-```bash
-npm run reset-project
+---
+
+## Project Structure
+
+```
+fantasy-app/
+├── app/                    # Expo Router screens
+│   ├── index.tsx           # Landing / splash screen
+│   ├── login.tsx           # Login screen
+│   ├── signup.tsx          # Account creation
+│   ├── home.tsx            # Home dashboard
+│   ├── leagues.tsx         # League list
+│   ├── leagues/[id].tsx    # Individual league view
+│   ├── teams/[id].tsx      # Team roster & management
+│   ├── trades/[teamId].tsx # Trade hub
+│   ├── trades/createTrade.tsx
+│   ├── game.tsx            # Live scoreboard
+│   ├── player.tsx          # Player detail
+│   ├── players/[id].tsx    # Player stats page
+│   ├── profile.tsx         # User profile
+│   ├── createLeague.tsx
+│   ├── joinLeague.tsx
+│   ├── positionPlayer.tsx  # Lineup slot management
+│   └── navbar.tsx
+├── services/               # Frontend API layer
+│   ├── api.tsx             # Axios base config
+│   ├── auth.tsx
+│   ├── leagues.tsx
+│   ├── teams.tsx
+│   ├── players.tsx
+│   ├── trades.tsx
+│   ├── user.tsx
+│   └── scheduler.tsx
+├── constants/
+│   └── theme.ts            # App-wide color/style constants
+├── server/                 # Express backend
+│   ├── server.js           # Entry point + cron job
+│   ├── config/db.js        # PostgreSQL connection pool
+│   ├── middleware/
+│   │   └── authMiddleware.js  # JWT verification
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── leagueController.js  # Includes syncAllLeagues()
+│   │   ├── teamController.js
+│   │   ├── playerController.js
+│   │   └── tradesController.js
+│   └── routes/
+│       ├── authRoutes.js
+│       ├── leagueRoutes.js
+│       ├── teamRoutes.js
+│       ├── playerRoutes.js
+│       └── tradeRoutes.js
+└── assets/
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## API Routes
 
-To learn more about developing your project with Expo, look at the following resources:
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/auth/...` | Register / login |
+| GET/POST | `/leagues/...` | League CRUD |
+| GET/POST | `/teams/...` | Team & roster management |
+| GET/POST | `/players/...` | Player lookup |
+| GET/POST | `/trades/...` | Trade management |
+| GET | `/api/mlb/teams` | Live MLB team data (ESPN) |
+| GET | `/api/mlb/scoreboard` | Live MLB scoreboard (ESPN) |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## Getting Started
 
-Join our community of developers creating universal apps.
+### Prerequisites
+- Node.js 18+
+- A Supabase project with a PostgreSQL database
+- A `.env` file in `server/` with your database credentials and JWT secret
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Frontend
+
+```bash
+cd fantasy-app
+npm install
+npx expo start
+```
+
+Scan the QR code in Expo Go, or press `i` for iOS simulator / `a` for Android emulator.
+
+### Backend
+
+```bash
+cd fantasy-app/server
+npm install
+npm run dev   # uses nodemon for hot reload
+```
+
+The server runs on port `5001` by default.
+
+### Environment Variables
+
+Create a `server/.env` file:
+
+```
+PORT=5001
+DATABASE_URL=your_supabase_postgres_connection_string
+JWT_SECRET=your_jwt_secret
+```
+
+---
+
+## Contributors
+
+- [Jay Cook](https://github.com/JayMCook)
+- [Samin Faruque](https://github.com/sfaruque10)
