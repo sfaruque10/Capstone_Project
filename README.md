@@ -1,4 +1,4 @@
-]# Fantasy Baseball Platform
+# Fantasy Baseball Platform
 
 A full-stack fantasy baseball application built with React Native and Node.js. Users can create accounts, form leagues, draft real MLB players, manage rosters, propose trades, and track live player stats — all backed by real-time MLB data from the ESPN API.
 
